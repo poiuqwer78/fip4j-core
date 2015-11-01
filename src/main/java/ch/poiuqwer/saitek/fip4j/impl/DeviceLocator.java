@@ -28,7 +28,6 @@ public class DeviceLocator {
 
     private static Logger LOGGER = LoggerFactory.getLogger(DeviceLocator.class);
 
-    private static final String FIP_GUID = "d83c83e376a584a80a83d6a2c7513e";
     private static final String PLUGIN_NAME = "saitek-fip4j";
 
     public static Device findFlightInformationPanel(DirectOutput directOutput) {
@@ -42,23 +41,20 @@ public class DeviceLocator {
             for (Pointer devicePointer : devicePointers) {
                 Pointer guidPointer = new Memory(16);
                 directOutput.DirectOutput_GetDeviceType(devicePointer, guidPointer);
-                String guid = readGuid(guidPointer);
-                if (FIP_GUID.equals(guid)) {
-                    LOGGER.info("Saitek Flight Information Panel found.");
+                Guid deviceGuid = Guid.fromByteArray(guidPointer.getByteArray(0, 16));
+                if (Guid.FIP.equals(deviceGuid)) {
+                    LOGGER.info("Saitek Flight Information Panel found: {}", Guid.FIP);
                     return new Device(devicePointer);
+                }
+                if (Guid.X52PRO.equals(deviceGuid)) {
+                    LOGGER.info("Saitek X52 Pro found: {}", Guid.FIP);
+                }
+                else {
+                    LOGGER.info("Unknown device found: {}", deviceGuid);
                 }
             }
         }
         LOGGER.error("No Saitek Flight Information Panel could be found.");
         return new Device();
-    }
-
-    private static String readGuid(Pointer guidPointer) {
-        StringBuilder stringBuilder = new StringBuilder();
-        byte[] guid = guidPointer.getByteArray(0, 16);
-        for (int i = 0; i < 16; i++) {
-            stringBuilder.append(String.format("%x", guid[i]));
-        }
-        return stringBuilder.toString();
     }
 }
