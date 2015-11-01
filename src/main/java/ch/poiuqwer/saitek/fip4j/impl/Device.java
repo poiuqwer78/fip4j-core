@@ -19,14 +19,14 @@ import com.sun.jna.PointerType;
  * limitations under the License.
  */
 public class Device extends PointerType {
-    private final Guid deviceGUID;
+    private final xGUID deviceGUID;
 
-    public Device(Pointer devicePointer, Guid deviceGUID) {
+    public Device(Pointer devicePointer, xGUID deviceGUID) {
         super(devicePointer);
         this.deviceGUID = deviceGUID;
     }
 
-    public Guid getDeviceGUID(){
+    public xGUID getDeviceGUID(){
         return deviceGUID;
     }
 }

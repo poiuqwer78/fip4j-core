@@ -24,7 +24,7 @@ import static com.google.common.base.Preconditions.*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class Guid {
+public class xGUID {
     private static final String GUID_PATTERN = "\\{[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12}\\}";
     private static final Predicate<String> syntax = Pattern.compile(GUID_PATTERN).asPredicate();
 
@@ -33,17 +33,17 @@ public class Guid {
     /** Create a GUID from its string representation.
      * @param formatted in the form of e.g. {29DAD506-F93B-4F20-85FA-1E02C04FAC17}
      */
-    public static Guid fromString(String formatted){
+    public static xGUID fromString(String formatted){
         checkArgument(syntax.test(formatted));
         formatted=formatted.substring(1,37).toLowerCase();
-        return new Guid(UUID.fromString(formatted));
+        return new xGUID(UUID.fromString(formatted));
     }
 
     /**
      * Create a GUID from a byte array
      * @param bytes byte array of length 16 representing the GUID
      */
-    public static Guid fromBinary(byte[] bytes){
+    public static xGUID fromBinary(byte[] bytes){
         checkArgument(bytes.length == 16);
         ByteBuffer source = ByteBuffer.wrap(bytes);
         ByteBuffer target = ByteBuffer.allocate(16).
@@ -54,10 +54,10 @@ public class Guid {
                 order(ByteOrder.BIG_ENDIAN).
                 putLong(source.getLong());
         target.rewind();
-        return new Guid(new UUID(target.getLong(), target.getLong()));
+        return new xGUID(new UUID(target.getLong(), target.getLong()));
     }
 
-    private Guid(UUID uuid){
+    private xGUID(UUID uuid){
         this.uuid=uuid;
     }
 
@@ -69,7 +69,7 @@ public class Guid {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Guid GUID = (Guid) o;
+        xGUID GUID = (xGUID) o;
         return Objects.equals(uuid, GUID.uuid);
     }
 
