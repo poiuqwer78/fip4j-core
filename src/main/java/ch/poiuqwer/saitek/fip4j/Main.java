@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -27,28 +28,29 @@ public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
+        LOGGER.info("Starting Saitek-FIP4j");
         Optional<DirectOutput> directOutput = Optional.empty();
         try {
-            directOutput = Library.load();
+            directOutput = LibraryManager.load();
             if (directOutput.isPresent()) {
-                Device device = DeviceLocator.findFlightInformationPanel(directOutput.get());
-                if (device.isPresent()){
+                Set<Device> devices = DeviceLocator.findFlightInformationPanel(directOutput.get());
+                for (Device device : devices){
                     FlightInstrumentPanel fip = new FlightInstrumentPanel(directOutput.get(),device);
                     runDemos(fip);
                 }
             }
         } catch (Throwable t){
-            LOGGER.error("An unexpected error occurred:", t);
+            LOGGER.error("An unexpected error occurred.", t);
         } finally {
             if (directOutput.isPresent()){
-                directOutput.get().DirectOutput_Deinitialize();
+                LibraryManager.unload(directOutput.get());
             }
-            LOGGER.info("Bye bye.");
+            LOGGER.info("Quitting Saitek-FIP4j");
         }
     }
 
     private static void runDemos(FlightInstrumentPanel fip) throws InterruptedException {
-        LOGGER.info("So, let's run some demo applications.");
+        LOGGER.info("Running demos.");
         new NightRiderDemo(fip).run();
     }
 

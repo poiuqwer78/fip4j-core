@@ -3,8 +3,6 @@ package ch.poiuqwer.saitek.fip4j;
 import ch.poiuqwer.saitek.fip4j.impl.Device;
 import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
 import com.sun.jna.Pointer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Copyright 2015 Hermann Lehner

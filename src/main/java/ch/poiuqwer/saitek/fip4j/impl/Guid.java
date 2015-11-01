@@ -25,14 +25,10 @@ import static com.google.common.base.Preconditions.*;
  * limitations under the License.
  */
 public class Guid {
-
-    public static final String GUID_PATTERN = "\\{[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12}\\}";
+    private static final String GUID_PATTERN = "\\{[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12}\\}";
     private static final Predicate<String> syntax = Pattern.compile(GUID_PATTERN).asPredicate();
 
-    public static final Guid FIP = Guid.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
-    public static final Guid X52PRO = Guid.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
-
-    private final UUID uuid  ;
+    private final UUID uuid;
 
     /** Create a GUID from its string representation.
      * @param formatted in the form of e.g. {29DAD506-F93B-4F20-85FA-1E02C04FAC17}
@@ -47,7 +43,7 @@ public class Guid {
      * Create a GUID from a byte array
      * @param bytes byte array of length 16 representing the GUID
      */
-    public static Guid fromByteArray(byte[] bytes){
+    public static Guid fromBinary(byte[] bytes){
         checkArgument(bytes.length == 16);
         ByteBuffer source = ByteBuffer.wrap(bytes);
         ByteBuffer target = ByteBuffer.allocate(16).
@@ -73,8 +69,8 @@ public class Guid {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Guid guid = (Guid) o;
-        return Objects.equals(uuid, guid.uuid);
+        Guid GUID = (Guid) o;
+        return Objects.equals(uuid, GUID.uuid);
     }
 
     @Override

@@ -24,24 +24,24 @@ import static com.sun.jna.platform.win32.WinReg.HKEY_LOCAL_MACHINE;
  * limitations under the License.
  */
 public class WindowsRegistry {
-    private static Logger LOGGER = LoggerFactory.getLogger(WindowsRegistry.class);
-
-    public static final String DEFAULT_LOCATION = "C:\\Program Files\\Saitek\\DirectOutput";
+    private static final Logger LOGGER = LoggerFactory.getLogger(WindowsRegistry.class);
+    private static final String REG_KEY = "SOFTWARE\\Saitek\\DirectOutput";
+    private static final String REG_VALUE = "DirectOutput";
+    private static final String DEFAULT_LOCATION = "C:\\Program Files\\Saitek\\DirectOutput";
 
     public static String getLibraryPath(){
-        LOGGER.info("Reading library location from windows registry...");
+        LOGGER.info("Reading library location from windows registry.");
         try{
-            String regValue = Advapi32Util.registryGetStringValue(HKEY_LOCAL_MACHINE,"SOFTWARE\\Saitek\\DirectOutput","DirectOutput");
+            String regValue = Advapi32Util.registryGetStringValue(HKEY_LOCAL_MACHINE, REG_KEY, REG_VALUE);
             File path = new File(regValue);
             if (path.exists()){
-                String parentPath = path.getParent();
-                LOGGER.info("Found location of DirectOutput.dll: {}", parentPath);
-                return parentPath;
+                LOGGER.info("Library location is {}.", path);
+                return path.getParent();
             } else {
-                LOGGER.error("Location '{}' is specified in registry, but it does not exist. Will use default location.", regValue);
+                LOGGER.error("Location {} is specified in registry, but it does not exist. Will use default location {}.", regValue, DEFAULT_LOCATION);
             }
         } catch (Throwable t){
-            LOGGER.error("Cannot read dll location from windows registry. Will use default location.", t);
+            LOGGER.error("Unexpected error while reading library location. Will use default location {}.", DEFAULT_LOCATION , t);
         }
         return DEFAULT_LOCATION;
     }

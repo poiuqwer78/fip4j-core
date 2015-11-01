@@ -35,7 +35,7 @@ public class NightRiderDemo {
     }
 
     public void run() throws InterruptedException {
-        LOGGER.info("Running night rider demo...");
+        LOGGER.info("Running NightRider demo.");
         try {
             directOutput.DirectOutput_AddPage(device, 0, new WString("Test"), DirectOutput.FLAG_SET_AS_ACTIVE);
             directOutput.DirectOutput_SetLed(device, 0, 7, 0);

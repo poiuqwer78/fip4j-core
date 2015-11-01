@@ -2,12 +2,13 @@ package ch.poiuqwer.saitek.fip4j.impl;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
-import com.sun.jna.WString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -25,36 +26,55 @@ import java.util.List;
  * limitations under the License.
  */
 public class DeviceLocator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeviceLocator.class);
 
-    private static Logger LOGGER = LoggerFactory.getLogger(DeviceLocator.class);
+    public static final Guid FIP = Guid.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
+    public static final Guid X52 = Guid.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
 
-    private static final String PLUGIN_NAME = "saitek-fip4j";
-
-    public static Device findFlightInformationPanel(DirectOutput directOutput) {
-        LOGGER.info("Searching a Saitek Flight Instrument Panel...");
+    public static Set<Device> findFlightInformationPanel(DirectOutput directOutput) {
+        LOGGER.info("Searching a Saitek Flight Instrument Panel.");
+        Set<Device> fipDevices= new HashSet<>();
         List<Pointer> devicePointers = new ArrayList<>();
-        WString pluginName = new WString(PLUGIN_NAME);
-        directOutput.DirectOutput_Initialize(pluginName);
         directOutput.DirectOutput_Enumerate((hDevice, pCtc) -> devicePointers.add(hDevice), null);
+
         if (devicePointers.size()>0) {
             LOGGER.info("Found {} device(s). Will check if they are Saitek Flight Instrument Panels.",devicePointers.size());
             for (Pointer devicePointer : devicePointers) {
-                Pointer guidPointer = new Memory(16);
-                directOutput.DirectOutput_GetDeviceType(devicePointer, guidPointer);
-                Guid deviceGuid = Guid.fromByteArray(guidPointer.getByteArray(0, 16));
-                if (Guid.FIP.equals(deviceGuid)) {
-                    LOGGER.info("Saitek Flight Information Panel found: {}", Guid.FIP);
-                    return new Device(devicePointer);
-                }
-                if (Guid.X52PRO.equals(deviceGuid)) {
-                    LOGGER.info("Saitek X52 Pro found: {}", Guid.FIP);
-                }
-                else {
-                    LOGGER.info("Unknown device found: {}", deviceGuid);
+                Guid deviceTypeGUID = getTypeGuid(directOutput, devicePointer);
+                if (isFlightInformationPanel(deviceTypeGUID)){
+                    Guid deviceGUID = getDeviceGuid(directOutput, devicePointer);
+                    LOGGER.info("Devide GUID: {}.", deviceGUID);
+                    fipDevices.add(new Device(devicePointer, deviceGUID));
                 }
             }
         }
-        LOGGER.error("No Saitek Flight Information Panel could be found.");
-        return new Device();
+        if (fipDevices.isEmpty()) {
+            LOGGER.error("No Saitek Flight Information Panel could be found.");
+        }
+        return fipDevices;
+    }
+
+    private static Guid getTypeGuid(DirectOutput directOutput, Pointer devicePointer) {
+        Pointer guidPointer = new Memory(16);
+        directOutput.DirectOutput_GetDeviceType(devicePointer, guidPointer);
+        return Guid.fromBinary(guidPointer.getByteArray(0, 16));
+    }
+
+    private static Guid getDeviceGuid(DirectOutput directOutput, Pointer devicePointer) {
+        Pointer guidPointer = new Memory(16);
+        directOutput.DirectOutput_GetDeviceInstance(devicePointer, guidPointer);
+        return Guid.fromBinary(guidPointer.getByteArray(0, 16));
+    }
+
+    private static boolean isFlightInformationPanel(Guid deviceTypeGUID) {
+        if (FIP.equals(deviceTypeGUID)) {
+            LOGGER.info("Saitek Flight Information Panel found: {}.", deviceTypeGUID);
+            return true;
+        } else if (X52.equals(deviceTypeGUID)) {
+            LOGGER.info("Saitek X52 Pro found: {}.", deviceTypeGUID);
+        } else {
+            LOGGER.info("Unknown device found: {}.", deviceTypeGUID);
+        }
+        return false;
     }
 }
