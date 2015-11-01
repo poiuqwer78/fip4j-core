@@ -28,198 +28,300 @@ import com.sun.jna.win32.StdCallLibrary;
 public interface DirectOutput extends StdCallLibrary {
 
     String JNA_LIBRARY_NAME = "DirectOutput";
-    /** X52Pro ScrollClick */
-    int SoftButton_Select = 0x00000001;
-    /** X52Pro ScrollUp, FIP RightScrollClockwize */
-    int SoftButton_Up = 0x00000002;
-    /** X52Pro ScrollDown, FIP RightScrollAnticlockwize */
-    int SoftButton_Down = 0x00000004;
-    /** FIP LeftScrollAnticlockwize */
-    int SoftButton_Left = 0x00000008;
-    /** FIP LeftScrollClockwize */
-    int SoftButton_Right = 0x00000010;
-    /** FIP LeftButton1 */
-    int SoftButton_1 = 0x00000020;
-    /** FIP LeftButton2 */
-    int SoftButton_2 = 0x00000040;
-    /** FIP LeftButton3 */
-    int SoftButton_3 = 0x00000080;
-    /** FIP LeftButton4 */
-    int SoftButton_4 = 0x00000100;
-    /** FIP LeftButton5 */
-    int SoftButton_5 = 0x00000200;
-    /** FIP LeftButton6 */
-    int SoftButton_6 = 0x00000400;
-    /** Set this page as the Active Page */
+
+    /**
+     * Left and right scroll buttons
+     */
+    int RIGHT_SCROLL_UP = 0x00000002;
+    int RIGHT_SCROLL_DOWN = 0x00000004;
+    int LEFT_SCROLL_DOWN = 0x00000008;
+    int LEFT_SCROLL_UP = 0x00000010;
+
+    /**
+     * Six buttons on the left
+     */
+    int BUTTON_1 = 0x00000020;
+    int BUTTON_2 = 0x00000040;
+    int BUTTON_3 = 0x00000080;
+    int BUTTON_4 = 0x00000100;
+    int BUTTON_5 = 0x00000200;
+    int BUTTON_6 = 0x00000400;
+
+    /**
+     * Flag to mark added page as active.
+     */
     int FLAG_SET_AS_ACTIVE = 0x00000001;
 
+    /**
+     * Callback for DirectOutput_Enumerate
+     */
     interface Pfn_DirectOutput_EnumerateCallback extends StdCallLibrary.StdCallCallback {
         void apply(Pointer hDevice, Pointer pCtxt);
     }
 
+    /**
+     * Callback for DirectOutput_RegisterDeviceCallback
+     */
     interface Pfn_DirectOutput_DeviceChange extends StdCallLibrary.StdCallCallback {
         void apply(Pointer hDevice, byte bAdded, Pointer pCtxt);
     }
 
+    /**
+     * Callback for DirectOutput_RegisterPageCallback
+     */
     interface Pfn_DirectOutput_PageChange extends StdCallLibrary.StdCallCallback {
         void apply(Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt);
     }
 
+    /**
+     * Callback for  DirectOutput_RegisterSoftButtonCallback
+     */
     interface Pfn_DirectOutput_SoftButtonChange extends StdCallLibrary.StdCallCallback {
         void apply(Pointer hDevice, int dwButtons, Pointer pCtxt);
     }
 
     /**
-     * S_OK : succeeded<br>
-     * Original signature : <code>HRESULT DirectOutput_Initialize(const wchar_t*)</code><br>
-     * <i>native declaration : line 90</i>
+     * Initialize the library
+     * @param wszPluginName null-terminated wchar_t name of the plugin. Used for debugging purposes. Can be NULL
+     * @return S_OK : succeeded
      */
     int DirectOutput_Initialize(WString wszPluginName);
 
     /**
-     * S_OK : succeeded<br>
-     * Original signature : <code>HRESULT DirectOutput_Deinitialize()</code><br>
-     * <i>native declaration : line 97</i>
+     * Cleanup the library
+     * @return S_OK : succeeded
      */
     int DirectOutput_Deinitialize();
 
     /**
-     * S_OK : succeeded<br>
-     * Original signature : <code>HRESULT DirectOutput_RegisterDeviceCallback(Pfn_DirectOutput_DeviceChange, void*)</code><br>
-     * <i>native declaration : line 106</i>
+     * Register a callback. Callback will be called whenever a device is added or removed, or when DirectOutput_Enumerate is called
+     * @param pfnCb pointer to the callback function to be called when a device is added or removed
+     * @param pCtxt caller supplied context pointer, passed to the callback function
+     * @return S_OK : succeeded
      */
     int DirectOutput_RegisterDeviceCallback(DirectOutput.Pfn_DirectOutput_DeviceChange pfnCb, Pointer pCtxt);
 
     /**
-     * HRESULT __stdcall DirectOutput_Enumerate();<br>
-     * Original signature : <code>HRESULT DirectOutput_Enumerate(Pfn_DirectOutput_EnumerateCallback, void*)</code><br>
-     * <i>native declaration : line 114</i>
+     * Enumerate all devices currently attached. Calls DeviceChange callback.
+     * @param pfnCb pointer to the callback function which is called once for each device
+     * @param pCtxt caller supplied context pointer, passed to the callback function
+     * @return S_OK : succeeded
      */
     int DirectOutput_Enumerate(DirectOutput.Pfn_DirectOutput_EnumerateCallback pfnCb, Pointer pCtxt);
 
     /**
-     * E_HANDLE : hDevice is not a valid device handle<br>
-     * Original signature : <code>HRESULT DirectOutput_RegisterPageCallback(void*, Pfn_DirectOutput_PageChange, void*)</code><br>
-     * <i>native declaration : line 128</i>
+     * Register a callback. Called when the page changes. Callee will only receive notifications about pages they added
+     * @param hDevice opaque device handle
+     * @param pfnCb caller supplied callback function, called when the active page is changed to/from one of the caller's pages
+     * @param pCtxt caller supplied context pointer, passed to the callback function
+     * @return S_OK: succeeded<br>
+     *     E_HANDLE: hDevice is not a valid device handle
      */
     int DirectOutput_RegisterPageCallback(Pointer hDevice, DirectOutput.Pfn_DirectOutput_PageChange pfnCb, Pointer pCtxt);
 
     /**
-     * E_HANDLE : hDevice is not a valid device handle<br>
-     * Original signature : <code>HRESULT DirectOutput_RegisterSoftButtonCallback(void*, Pfn_DirectOutput_SoftButtonChange, void*)</code><br>
-     * <i>native declaration : line 139</i>
+     * Register a callback. Called when the soft buttons are changed and the callee's page is active
+     * @param hDevice opaque device handle
+     * @param pfnCb caller supplied callback function, called when the soft buttons are changed and one of the caller's pages is active
+     * @param pCtxt caller supplied context pointer, passed to the callback function
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle
      */
     int DirectOutput_RegisterSoftButtonCallback(Pointer hDevice, DirectOutput.Pfn_DirectOutput_SoftButtonChange pfnCb, Pointer pCtxt);
 
     /**
-     * E_INVALIDARG : pGuid is NULL<br>
-     * Original signature : <code>HRESULT DirectOutput_GetDeviceType(void*, LPGUID)</code><br>
-     * <i>native declaration : line 153</i>
+     * Get the device type GUID. See DeviceType_* constants
+     * @param hDevice opaque device handle
+     * @param pGuid pointer to GUID to receive device type identifier. See DeviceType_* constants
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_INVALIDARG : pGuid is NULL
      */
     int DirectOutput_GetDeviceType(Pointer hDevice, Pointer pGuid);
 
     /**
-     * E_NOTIMPL : hDevice does not support DirectInput.<br>
-     * Original signature : <code>HRESULT DirectOutput_GetDeviceInstance(void*, LPGUID)</code><br>
-     * <i>native declaration : line 165</i>
+     * Get the device instance GUID used by IDirectInput::CreateDevice
+     * @param hDevice opaque device handle
+     * @param pGuid pointer to GUID to receive device's DirectInput Instance Guid.
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_INVALIDARG : pGuid is NULL<br>
+     *     E_NOTIMPL : hDevice does not support DirectInput.
      */
     int DirectOutput_GetDeviceInstance(Pointer hDevice, Pointer pGuid);
 
     /**
-     * E_NOTIMPL : hDevice does not support SST profiles<br>
-     * Original signature : <code>HRESULT DirectOutput_SetProfile(void*, DWORD, const wchar_t*)</code><br>
-     * <i>native declaration : line 180</i>
-     */
-    int DirectOutput_SetProfile(Pointer hDevice, int cchProfile, WString wszProfile);
-
-    /**
-     * E_HANDLE : hDevice is not a valid device handle<br>
-     * Original signature : <code>HRESULT DirectOutput_AddPage(void*, DWORD, const wchar_t*, DWORD)</code><br>
-     * <i>native declaration : line 195</i>
+     * Adds a page to the device
+     * @param hDevice opaque device handle
+     * @param dwPage caller assigned page id to add
+     * @param wszDebugName Only used for debugging, can be null
+     * @param dwFlags flags ( 0 | FLAG_SET_AS_ACTIVE )
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle
      */
     int DirectOutput_AddPage(Pointer hDevice, int dwPage, WString wszDebugName, int dwFlags);
 
     /**
-     * E_INVALIDARG : dwPage is not a valid page id<br>
-     * Original signature : <code>HRESULT DirectOutput_RemovePage(void*, DWORD)</code><br>
-     * <i>native declaration : line 206</i>
+     * Removes a page from the device
+     * @param hDevice opaque device handle
+     * @param dwPage caller assigned page id to remove
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_INVALIDARG : dwPage is not a valid page id
      */
     int DirectOutput_RemovePage(Pointer hDevice, int dwPage);
 
     /**
-     * E_PAGENOTACTIVE : dwPage is not the active page<br>
-     * Original signature : <code>HRESULT DirectOutput_SetLed(void*, DWORD, DWORD, DWORD)</code><br>
-     * <i>native declaration : line 224</i>
+     * Set the state of a LED on the device
+     * @param hDevice opaque device handle
+     * @param dwPage page to display the led on
+     * @param dwIndex index of the led (1 to 6: buttons, 7: page up, 8: page down)
+     * @param dwValue value of the led (0 is off, 1 is on)
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not have any leds<br>
+     *     E_INVALIDARG : dwPage or dwIndex is not a valid id<br>
+     *     E_PAGENOTACTIVE : dwPage is not the active page
      */
     int DirectOutput_SetLed(Pointer hDevice, int dwPage, int dwIndex, int dwValue);
 
     /**
-     * E_PAGENOTACTIVE : dwPage is not the active page<br>
-     * Original signature : <code>HRESULT DirectOutput_SetString(void*, DWORD, DWORD, DWORD, const wchar_t*)</code><br>
-     * <i>native declaration : line 240</i>
-     */
-    int DirectOutput_SetString(Pointer hDevice, int dwPage, int dwIndex, int cchValue, WString wszValue);
-
-    /**
-     * E_BUFFERTOOSMALL : cbValue is not of the correct size<br>
-     * Original signature : <code>HRESULT DirectOutput_SetImage(void*, DWORD, DWORD, DWORD, const void*)</code><br>
-     * <i>native declaration : line 257</i>
+     * Set the image on the device.
+     * @param hDevice opaque device handle
+     * @param dwPage page to display the image on
+     * @param dwIndex index of the image
+     * @param cbValue the count of bytes of pvValue
+     * @param pvValue the raw bytes from a BMP (only the bytes that contain pixel data - must be correct format and size)
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not have any images<br>
+     *     E_INVALIDARG : dwPage or dwIndex is not a valid id<br>
+     *     E_PAGENOTACTIVE : dwPage is not the active page<br>
+     *     E_BUFFERTOOSMALL : cbValue is not of the correct size
      */
     int DirectOutput_SetImage(Pointer hDevice, int dwPage, int dwIndex, int cbValue, Pointer pvValue);
 
     /**
-     * E_PAGENOTACTIVE : dwPage is not the active page<br>
-     * Original signature : <code>HRESULT DirectOutput_SetImageFromFile(void*, DWORD, DWORD, DWORD, const wchar_t*)</code><br>
-     * <i>native declaration : line 273</i>
+     * Set the image on the device from a file.
+     * @param hDevice opaque device handle
+     * @param dwPage page to display the image on
+     * @param dwIndex index of the image
+     * @param cchFilename the count of characters in wszFilename
+     * @param wszFilename the full path to the image file to display. Must be a BMP or JPG file
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not have any images<br>
+     *     E_INVALIDARG : dwPage or dwIndex is not a valid id<br>
+     *     E_PAGENOTACTIVE : dwPage is not the active page
      */
     int DirectOutput_SetImageFromFile(Pointer hDevice, int dwPage, int dwIndex, int cchFilename, WString wszFilename);
 
     /**
-     * E_FAIL : fatal error<br>
-     * Original signature : <code>HRESULT DirectOutput_StartServer(void*, DWORD, const wchar_t*, LPDWORD, PSRequestStatus)</code><br>
-     * <i>native declaration : line 291</i>
+     * Download and start a server application on the device
+     * @param hDevice opaque device handle
+     * @param cchFilename count of characters in wszFilename
+     * @param wszFilename full path to the server application to run
+     * @param pdwServerId pointer to a DWORD that receives the server id
+     * @param psStatus pointer to obtain additional error details. Optional
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not allow server applications<br>
+     *     E_FAIL : fatal error
      */
     int DirectOutput_StartServer(Pointer hDevice, int cchFilename, WString wszFilename, Pointer pdwServerId, RequestStatus psStatus);
 
     /**
-     * E_FAIL : fatal error<br>
-     * Original signature : <code>HRESULT DirectOutput_CloseServer(void*, DWORD, PSRequestStatus)</code><br>
-     * <i>native declaration : line 304</i>
+     * Stop and cleanup a server application on the device
+     * @param hDevice opaque device handle
+     * @param dwServerId server id returned from DirectOutput_StartServer
+     * @param psStatus pointer to obtain additional error details. Optional
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not allow server applications<br>
+     *     E_FAIL : fatal error
      */
     int DirectOutput_CloseServer(Pointer hDevice, int dwServerId, RequestStatus psStatus);
 
     /**
-     * E_PAGENOTACTIVE : dwPage is not the active page and the server tried to access the display<br>
-     * Original signature : <code>HRESULT DirectOutput_SendServerMsg(void*, DWORD, DWORD, DWORD, DWORD, const void*, DWORD, void*, PSRequestStatus)</code><br>
-     * <i>native declaration : line 324</i>
+     * Send a message to a server application on the device
+     * @param hDevice opaque device handle
+     * @param dwServerId server id returned from DirectOutput_StartServer
+     * @param dwRequest user defined request code
+     * @param dwPage page id of the message
+     * @param cbIn count of BYTEs of the input buffer
+     * @param pvIn input buffer
+     * @param cbOut count of BYTEs of the output buffer
+     * @param pvOut output buffer
+     * @param psStatus pointer to obtain additional error details. Optional
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not allow server applications<br>
+     *     E_FAIL : fatal error<br>
+     *     E_PAGENOTACTIVE : dwPage is not the active page and the server tried to access the display
      */
     int DirectOutput_SendServerMsg(Pointer hDevice, int dwServerId, int dwRequest, int dwPage, int cbIn, Pointer pvIn, int cbOut, Pointer pvOut, RequestStatus psStatus);
 
     /**
-     * E_PAGENOTACTIVE : dwPage is not the active page and the server tried to access the display<br>
-     * Original signature : <code>HRESULT DirectOutput_SendServerFile(void*, DWORD, DWORD, DWORD, DWORD, const void*, DWORD, const wchar_t*, DWORD, void*, PSRequestStatus)</code><br>
-     * <i>native declaration : line 346</i>
+     * Send a message to a server application on the device. The file is appended to the user defined header data.
+     * @param hDevice opaque device handle
+     * @param dwServerId server id returned from DirectOutput_StartServer
+     * @param dwRequest user defined request code
+     * @param dwPage page id of the message
+     * @param cbInHdr count of BYTEs of the input buffer header
+     * @param pvInHdr input buffer header
+     * @param cchFile count of characters in the filename
+     * @param wszFile full path to file. Contents of file are appended to the input header
+     * @param cbOut count of BYTEs of the output buffer
+     * @param pvOut output buffer
+     * @param psStatus pointer to obtain additional error details. Optional
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not allow server applications<br>
+     *     E_FAIL : fatal error<br>
+     *     E_PAGENOTACTIVE : dwPage is not the active page and the server tried to access the display
      */
     int DirectOutput_SendServerFile(Pointer hDevice, int dwServerId, int dwRequest, int dwPage, int cbInHdr, Pointer pvInHdr, int cchFile, WString wszFile, int cbOut, Pointer pvOut, RequestStatus psStatus);
 
     /**
-     * E_FAIL : fatal error<br>
-     * Original signature : <code>HRESULT DirectOutput_SaveFile(void*, DWORD, DWORD, DWORD, const wchar_t*, PSRequestStatus)</code><br>
-     * <i>native declaration : line 365</i>
+     * Save a file on the device
+     * @param hDevice opaque device handle
+     * @param dwPage page id of the message
+     * @param dwFile file id to use for this file
+     * @param cchFilename count of characters in wszFilename
+     * @param wszFilename full path to file to save
+     * @param psStatus pointer to obtain additional error details. Optional
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not allow saving files<br>
+     *     E_FAIL : fatal error
      */
     int DirectOutput_SaveFile(Pointer hDevice, int dwPage, int dwFile, int cchFilename, WString wszFilename, RequestStatus psStatus);
 
     /**
-     * E_FAIL : fatal error<br>
-     * Original signature : <code>HRESULT DirectOutput_DisplayFile(void*, DWORD, DWORD, DWORD, PSRequestStatus)</code><br>
-     * <i>native declaration : line 381</i>
+     * Display a previously saved file on the device
+     * @param hDevice opaque device handle
+     * @param dwPage page id of the message
+     * @param dwIndex index of the output to display on
+     * @param dwFile file id to use for this file
+     * @param psStatus pointer to obtain additional error details. Optional
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not allow displaying files<br>
+     *     E_PAGENOTACTIVE : the page is not active<br>
+     *     E_FAIL : fatal error
      */
     int DirectOutput_DisplayFile(Pointer hDevice, int dwPage, int dwIndex, int dwFile, RequestStatus psStatus);
 
     /**
-     * E_FAIL : fatal error<br>
-     * Original signature : <code>HRESULT DirectOutput_DeleteFile(void*, DWORD, DWORD, PSRequestStatus)</code><br>
-     * <i>native declaration : line 395</i>
+     * Delete a file from the device
+     * @param hDevice opaque device handle
+     * @param dwPage page id of the message
+     * @param dwFile file id to use for this file
+     * @param psStatus pointer to obtain additional error details. Optional
+     * @return S_OK : succeeded<br>
+     *     E_HANDLE : hDevice is not a valid device handle<br>
+     *     E_NOTIMPL : hDevice does not allow deleting files<br>
+     *     E_FAIL : fatal error
      */
     int DirectOutput_DeleteFile(Pointer hDevice, int dwPage, int dwFile, RequestStatus psStatus);
 

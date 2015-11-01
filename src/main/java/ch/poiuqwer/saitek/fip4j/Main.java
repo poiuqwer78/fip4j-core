@@ -28,7 +28,7 @@ public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
-        LOGGER.info("Starting Saitek-FIP4j");
+        LOGGER.info("Starting Saitek-FIP4j.");
         Optional<DirectOutput> directOutput = Optional.empty();
         try {
             directOutput = LibraryManager.load();
@@ -45,7 +45,7 @@ public class Main {
             if (directOutput.isPresent()){
                 LibraryManager.unload(directOutput.get());
             }
-            LOGGER.info("Quitting Saitek-FIP4j");
+            LOGGER.info("Quitting Saitek-FIP4j.");
         }
     }
 

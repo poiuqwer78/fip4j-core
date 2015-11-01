@@ -30,8 +30,8 @@ public class NightRiderDemo {
     Pointer device;
 
     public NightRiderDemo(FlightInstrumentPanel flightInstrumentPanel) {
-        this.directOutput=flightInstrumentPanel.getDirectOutput();
-        this.device=flightInstrumentPanel.getDevice();
+        this.directOutput = flightInstrumentPanel.getDirectOutput();
+        this.device = flightInstrumentPanel.getDevice();
     }
 
     public void run() throws InterruptedException {
@@ -40,8 +40,6 @@ public class NightRiderDemo {
             directOutput.DirectOutput_AddPage(device, 0, new WString("Test"), DirectOutput.FLAG_SET_AS_ACTIVE);
             directOutput.DirectOutput_SetLed(device, 0, 7, 0);
             directOutput.DirectOutput_SetLed(device, 0, 8, 0);
-            directOutput.DirectOutput_SetLed(device, 0, 1, 1);
-
             for (int j = 0; j < 3; j++) {
                 Thread.sleep(200);
                 for (int i = 2; i <= 6; i++) {
@@ -58,7 +56,6 @@ public class NightRiderDemo {
             }
         } finally {
             directOutput.DirectOutput_RemovePage(device, 0);
-            directOutput.DirectOutput_RemovePage(device, 1);
         }
     }
 
