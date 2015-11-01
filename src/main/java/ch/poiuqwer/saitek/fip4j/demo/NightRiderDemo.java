@@ -1,6 +1,6 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.FlightInstrumentPanel;
+import ch.poiuqwer.saitek.fip4j.ProFlightInstrumentPanel;
 import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
@@ -29,7 +29,7 @@ public class NightRiderDemo {
     DirectOutput directOutput;
     Pointer device;
 
-    public NightRiderDemo(FlightInstrumentPanel flightInstrumentPanel) {
+    public NightRiderDemo(ProFlightInstrumentPanel flightInstrumentPanel) {
         this.directOutput = flightInstrumentPanel.getDirectOutput();
         this.device = flightInstrumentPanel.getDevice();
     }

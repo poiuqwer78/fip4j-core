@@ -33,9 +33,9 @@ public class Main {
         try {
             directOutput = LibraryManager.load();
             if (directOutput.isPresent()) {
-                Set<Device> devices = DeviceLocator.findFlightInformationPanel(directOutput.get());
+                Set<Device> devices = DeviceLocator.findProFlightInstrumentPanel(directOutput.get());
                 for (Device device : devices){
-                    FlightInstrumentPanel fip = new FlightInstrumentPanel(directOutput.get(),device);
+                    ProFlightInstrumentPanel fip = new ProFlightInstrumentPanel(directOutput.get(),device);
                     runDemos(fip);
                 }
             }
@@ -49,7 +49,7 @@ public class Main {
         }
     }
 
-    private static void runDemos(FlightInstrumentPanel fip) throws InterruptedException {
+    private static void runDemos(ProFlightInstrumentPanel fip) throws InterruptedException {
         LOGGER.info("Running demos.");
         new NightRiderDemo(fip).run();
     }

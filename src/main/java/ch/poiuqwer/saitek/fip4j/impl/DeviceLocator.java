@@ -31,27 +31,37 @@ public class DeviceLocator {
     public static final GUID FIP = GUID.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
     public static final GUID X52 = GUID.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
 
-    public static Set<Device> findFlightInformationPanel(DirectOutput directOutput) {
-        LOGGER.info("Searching a Saitek Flight Instrument Panel.");
+    public static Set<Device> findProFlightInstrumentPanel(DirectOutput directOutput) {
+        LOGGER.info("Searching a Saitek Pro Flight Instrument Panel.");
         Set<Device> fipDevices= new HashSet<>();
         List<Pointer> devicePointers = new ArrayList<>();
         directOutput.DirectOutput_Enumerate((hDevice, pCtc) -> devicePointers.add(hDevice), null);
 
         if (devicePointers.size()>0) {
-            LOGGER.info("Found {} device(s). Will check if they are Saitek Flight Instrument Panels.",devicePointers.size());
+            LOGGER.info("Found {} device(s). Will check if they are Saitek Pro Flight Instrument Panels.",devicePointers.size());
             for (Pointer devicePointer : devicePointers) {
                 GUID deviceTypeGUID = getTypeGuid(directOutput, devicePointer);
-                if (isFlightInformationPanel(deviceTypeGUID)){
+                if (isProFlightInstrumentPanel(deviceTypeGUID)){
                     GUID deviceGUID = getDeviceGuid(directOutput, devicePointer);
-                    LOGGER.info("Devide GUID: {}.", deviceGUID);
-                    fipDevices.add(new Device(devicePointer, deviceGUID));
+                    String serialNumber = getDeviceSerialNumber(directOutput, devicePointer);
+                    Device device = new Device(devicePointer, deviceGUID, serialNumber);
+                    LOGGER.info(device.toString());
+                    fipDevices.add(device);
                 }
             }
         }
         if (fipDevices.isEmpty()) {
-            LOGGER.error("No Saitek Flight Information Panel could be found.");
+            LOGGER.error("No Saitek Pro Flight Instrument Panel could be found.");
         }
         return fipDevices;
+    }
+
+    private static String getDeviceSerialNumber(DirectOutput directOutput, Pointer devicePointer) {
+        Pointer serialNumberPointer = new Memory(32);
+        directOutput.DirectOutput_GetSerialNumber(devicePointer,serialNumberPointer,16);
+        char[] serialNumberCharArray = new char[16];
+        serialNumberPointer.read(0,serialNumberCharArray,0,16);
+        return String.valueOf(serialNumberCharArray).split("\0")[0];
     }
 
     private static GUID getTypeGuid(DirectOutput directOutput, Pointer devicePointer) {
@@ -66,14 +76,14 @@ public class DeviceLocator {
         return GUID.fromBinary(guidPointer.getByteArray(0, 16));
     }
 
-    private static boolean isFlightInformationPanel(GUID deviceTypeGUID) {
+    private static boolean isProFlightInstrumentPanel(GUID deviceTypeGUID) {
         if (FIP.equals(deviceTypeGUID)) {
-            LOGGER.info("Saitek Flight Information Panel found: {}.", deviceTypeGUID);
+            LOGGER.info("Saitek Pro Flight Instrument Panel found.");
             return true;
         } else if (X52.equals(deviceTypeGUID)) {
-            LOGGER.info("Saitek X52 Pro found: {}.", deviceTypeGUID);
+            LOGGER.info("Saitek X52 Pro found.");
         } else {
-            LOGGER.info("Unknown device found: {}.", deviceTypeGUID);
+            LOGGER.info("Unknown device found with GUID {}.", deviceTypeGUID);
         }
         return false;
     }

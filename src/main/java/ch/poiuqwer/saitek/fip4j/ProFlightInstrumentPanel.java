@@ -19,12 +19,12 @@ import com.sun.jna.Pointer;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class FlightInstrumentPanel {
+public class ProFlightInstrumentPanel {
 
     private DirectOutput directOutput;
     private Pointer device;
 
-    public FlightInstrumentPanel(DirectOutput directOutput, Device device) {
+    public ProFlightInstrumentPanel(DirectOutput directOutput, Device device) {
         this.directOutput = directOutput;
         this.device = device.getPointer();
     }

@@ -151,6 +151,15 @@ public interface DirectOutput extends StdCallLibrary {
     int DirectOutput_GetDeviceInstance(Pointer hDevice, Pointer pGuid);
 
     /**
+     *
+     * @param hDevice opaque device handle
+     * @param pszSerialNumber String buffer to hold the serial number of the device. The String can be empty if no serial number associated with the device.
+     * @param dwSize Specify the number of characters of the string buffer. The value of this parameter shouldn't be greater than 16. Otherwise, the string buffer is truncated into 16 characters.
+     * @return S_OK : succeeded
+     */
+    int DirectOutput_GetSerialNumber(Pointer hDevice, Pointer pszSerialNumber, int dwSize);
+
+    /**
      * Adds a page to the device
      * @param hDevice opaque device handle
      * @param dwPage caller assigned page id to add
