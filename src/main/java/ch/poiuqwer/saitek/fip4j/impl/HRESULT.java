@@ -15,7 +15,7 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public enum xHResult {
+public enum HRESULT {
 
     // Common HRESULT values
     S_OK("Operation successful",0x00000000),
@@ -37,13 +37,13 @@ public enum xHResult {
     private String description;
     private int code;
 
-    xHResult(String description, int code) {
+    HRESULT(String description, int code) {
         this.description = description;
         this.code = code;
     }
 
-    public static xHResult hresult(int code){
-        for (xHResult result : xHResult.values()){
+    public static HRESULT hresult(int code){
+        for (HRESULT result : HRESULT.values()){
             if (result.getCode()==code){
                 return result;
             }

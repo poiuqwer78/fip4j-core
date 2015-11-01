@@ -28,8 +28,8 @@ import java.util.Set;
 public class DeviceLocator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceLocator.class);
 
-    public static final xGUID FIP = xGUID.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
-    public static final xGUID X52 = xGUID.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
+    public static final GUID FIP = GUID.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
+    public static final GUID X52 = GUID.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
 
     public static Set<Device> findFlightInformationPanel(DirectOutput directOutput) {
         LOGGER.info("Searching a Saitek Flight Instrument Panel.");
@@ -40,9 +40,9 @@ public class DeviceLocator {
         if (devicePointers.size()>0) {
             LOGGER.info("Found {} device(s). Will check if they are Saitek Flight Instrument Panels.",devicePointers.size());
             for (Pointer devicePointer : devicePointers) {
-                xGUID deviceTypeGUID = getTypeGuid(directOutput, devicePointer);
+                GUID deviceTypeGUID = getTypeGuid(directOutput, devicePointer);
                 if (isFlightInformationPanel(deviceTypeGUID)){
-                    xGUID deviceGUID = getDeviceGuid(directOutput, devicePointer);
+                    GUID deviceGUID = getDeviceGuid(directOutput, devicePointer);
                     LOGGER.info("Devide GUID: {}.", deviceGUID);
                     fipDevices.add(new Device(devicePointer, deviceGUID));
                 }
@@ -54,19 +54,19 @@ public class DeviceLocator {
         return fipDevices;
     }
 
-    private static xGUID getTypeGuid(DirectOutput directOutput, Pointer devicePointer) {
+    private static GUID getTypeGuid(DirectOutput directOutput, Pointer devicePointer) {
         Pointer guidPointer = new Memory(16);
         directOutput.DirectOutput_GetDeviceType(devicePointer, guidPointer);
-        return xGUID.fromBinary(guidPointer.getByteArray(0, 16));
+        return GUID.fromBinary(guidPointer.getByteArray(0, 16));
     }
 
-    private static xGUID getDeviceGuid(DirectOutput directOutput, Pointer devicePointer) {
+    private static GUID getDeviceGuid(DirectOutput directOutput, Pointer devicePointer) {
         Pointer guidPointer = new Memory(16);
         directOutput.DirectOutput_GetDeviceInstance(devicePointer, guidPointer);
-        return xGUID.fromBinary(guidPointer.getByteArray(0, 16));
+        return GUID.fromBinary(guidPointer.getByteArray(0, 16));
     }
 
-    private static boolean isFlightInformationPanel(xGUID deviceTypeGUID) {
+    private static boolean isFlightInformationPanel(GUID deviceTypeGUID) {
         if (FIP.equals(deviceTypeGUID)) {
             LOGGER.info("Saitek Flight Information Panel found: {}.", deviceTypeGUID);
             return true;
