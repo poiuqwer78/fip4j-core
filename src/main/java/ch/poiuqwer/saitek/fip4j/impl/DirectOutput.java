@@ -30,12 +30,16 @@ public class DirectOutput {
 
     public HRESULT call(int code) {
         HRESULT result = HRESULT.of(code);
-        String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
         switch (result){
             case S_OK:
-                LOGGER.debug("Call '{}' {}",methodName,result);
+                if (LOGGER.isDebugEnabled()) {
+                    // Expensive operation, only perform if logging really happens on this level.
+                    String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
+                    LOGGER.debug("Call '{}' {}", methodName, result);
+                }
                 break;
             default:
+                String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
                 LOGGER.error("Call '{}' {}",methodName,result);
         }
         return result;
