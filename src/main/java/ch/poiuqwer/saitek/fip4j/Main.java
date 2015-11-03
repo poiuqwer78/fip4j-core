@@ -43,7 +43,7 @@ public class Main {
             LOGGER.error("An unexpected error occurred.", t);
         } finally {
             if (directOutput.isPresent()){
-                LibraryManager.unload(directOutput.get());
+                directOutput.get().deinitialize();
             }
             LOGGER.info("Quitting Saitek-FIP4j.");
         }

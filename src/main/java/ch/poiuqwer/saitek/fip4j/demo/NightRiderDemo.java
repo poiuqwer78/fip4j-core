@@ -1,7 +1,7 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
 import ch.poiuqwer.saitek.fip4j.ProFlightInstrumentPanel;
-import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
+import ch.poiuqwer.saitek.fip4j.impl.DirectOutputLibrary;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public class NightRiderDemo {
 
     private static Logger LOGGER = LoggerFactory.getLogger(NightRiderDemo.class);
 
-    DirectOutput directOutput;
+    DirectOutputLibrary directOutput;
     Pointer device;
 
     public NightRiderDemo(ProFlightInstrumentPanel flightInstrumentPanel) {
@@ -37,7 +37,7 @@ public class NightRiderDemo {
     public void run() throws InterruptedException {
         LOGGER.info("Running NightRider demo.");
         try {
-            directOutput.DirectOutput_AddPage(device, 0, new WString("Test"), DirectOutput.FLAG_SET_AS_ACTIVE);
+            directOutput.DirectOutput_AddPage(device, 0, new WString("Test"), DirectOutputLibrary.FLAG_SET_AS_ACTIVE);
             directOutput.DirectOutput_SetLed(device, 0, 7, 0);
             directOutput.DirectOutput_SetLed(device, 0, 8, 0);
             for (int j = 0; j < 3; j++) {

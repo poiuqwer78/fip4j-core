@@ -30,7 +30,7 @@ public class WindowsRegistry {
     private static final String DEFAULT_LOCATION = "C:\\Program Files\\Saitek\\DirectOutput";
 
     public static String getLibraryPath(){
-        LOGGER.info("Reading library location from windows registry.");
+        LOGGER.debug("Reading library location from windows registry.");
         try{
             String regValue = Advapi32Util.registryGetStringValue(HKEY_LOCAL_MACHINE, REG_KEY, REG_VALUE);
             File path = new File(regValue);

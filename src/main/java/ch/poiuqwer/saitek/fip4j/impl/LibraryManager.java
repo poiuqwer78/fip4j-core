@@ -28,11 +28,11 @@ public class LibraryManager {
     public static final String PLUGIN_NAME = "Saitek-FIP4j";
 
     public static Optional<DirectOutput> load(){
-        LOGGER.info("Loading DirectOutput library.");
+        LOGGER.debug("Loading DirectOutput library.");
         System.setProperty("jna.library.path", WindowsRegistry.getLibraryPath());
         try {
             DirectOutput directOutput = loadLibrary();
-            initializeLibrary(directOutput);
+            directOutput.initialize(PLUGIN_NAME);
             return Optional.of(directOutput);
         } catch (Throwable t) {
             LOGGER.error("Unable to load DirectOutput.dll (running on {} - {} - {}).", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"), t);
@@ -40,21 +40,9 @@ public class LibraryManager {
         return Optional.empty();
     }
 
-    public static void unload(DirectOutput directOutput){
-        LOGGER.info("Cleaning up DirectOutput library.");
-        directOutput.DirectOutput_Deinitialize();
-    }
-
-    private static void initializeLibrary(DirectOutput directOutput) {
-        LOGGER.info("Initializing DirectOutput library.");
-        WString pluginName = new WString(PLUGIN_NAME);
-        directOutput.DirectOutput_Initialize(pluginName);
-    }
-
     private static DirectOutput loadLibrary() {
-        NativeLibrary.getInstance(DirectOutput.JNA_LIBRARY_NAME);
-        DirectOutput directOutput = (DirectOutput) Native.loadLibrary(DirectOutput.JNA_LIBRARY_NAME, DirectOutput.class);
-        LOGGER.info("DirectOutput library loaded successfully.");
-        return directOutput;
+        NativeLibrary.getInstance(DirectOutputLibrary.JNA_LIBRARY_NAME);
+        DirectOutputLibrary library = (DirectOutputLibrary) Native.loadLibrary(DirectOutputLibrary.JNA_LIBRARY_NAME, DirectOutputLibrary.class);
+        return new DirectOutput(library);
     }
 }

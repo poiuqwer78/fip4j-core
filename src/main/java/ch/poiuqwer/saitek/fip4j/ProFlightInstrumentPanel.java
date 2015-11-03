@@ -2,6 +2,7 @@ package ch.poiuqwer.saitek.fip4j;
 
 import ch.poiuqwer.saitek.fip4j.impl.Device;
 import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
+import ch.poiuqwer.saitek.fip4j.impl.DirectOutputLibrary;
 import com.sun.jna.Pointer;
 
 /**
@@ -21,11 +22,11 @@ import com.sun.jna.Pointer;
  */
 public class ProFlightInstrumentPanel {
 
-    private DirectOutput directOutput;
+    private DirectOutputLibrary directOutput;
     private Pointer device;
 
     public ProFlightInstrumentPanel(DirectOutput directOutput, Device device) {
-        this.directOutput = directOutput;
+        this.directOutput = directOutput.dll;
         this.device = device.getPointer();
     }
 
@@ -33,7 +34,7 @@ public class ProFlightInstrumentPanel {
         return device;
     }
 
-    public DirectOutput getDirectOutput() {
+    public DirectOutputLibrary getDirectOutput() {
         return directOutput;
     }
 }

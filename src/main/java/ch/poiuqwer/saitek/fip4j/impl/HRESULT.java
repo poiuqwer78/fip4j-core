@@ -1,5 +1,10 @@
 package ch.poiuqwer.saitek.fip4j.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static ch.poiuqwer.saitek.fip4j.impl.Severity.*;
+
 /**
  * Copyright 2015 Hermann Lehner
  * <p>
@@ -16,47 +21,52 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * limitations under the License.
  */
 public enum HRESULT {
-
     // Common HRESULT values
-    S_OK("Operation successful",0x00000000),
-    E_ABORT("Operation aborted",0x80004004),
-    E_ACCESSDENIED("Access denied",0x80070005),
-    E_FAIL("Unspecified failure",0x80004005),
-    E_HANDLE("Invalid handle",0x80070006),
-    E_INVALIDARG("Invalid argument",0x80070057),
-    E_NOINTERFACE("No such interface",0x80004002),
-    E_NOTIMPL("Not implemented",0x80004001),
-    E_OUTOFMEMORY("Memory allocation failed",0x8007000E),
-    E_POINTER("Invalid pointer",0x80004003),
-    E_UNEXPECTED("Unexpected failure",0x8000FFFF),
+    S_OK("Operation successful"),
+    E_ABORT("Operation aborted"),
+    E_ACCESSDENIED("Access denied"),
+    E_FAIL("Unspecified failure"),
+    E_HANDLE("Invalid handle"),
+    E_INVALIDARG("Invalid argument"),
+    E_NOINTERFACE("No such interface"),
+    E_NOTIMPL("Not implemented"),
+    E_OUTOFMEMORY("Memory allocation failed"),
+    E_POINTER("Invalid pointer"),
+    E_UNEXPECTED("Unexpected failure"),
 
     // Specific DirectOutput values
-    E_PAGENOTACTIVE("Page not active",0xFF040001),
-    E_BUFFERTOOSMALL("Buffer too small",0xFF04006F);
+    E_PAGENOTACTIVE("Page not active"),
+    E_BUFFERTOOSMALL("Buffer too small");
 
-    private String description;
-    private int code;
+    private final String description;
 
-    HRESULT(String description, int code) {
+    HRESULT(String description) {
         this.description = description;
-        this.code = code;
     }
 
-    public static HRESULT hresult(int code){
-        for (HRESULT result : HRESULT.values()){
-            if (result.getCode()==code){
-                return result;
-            }
-        }
-        return S_OK;
+    private static final Map<Integer, HRESULT> lookup=new HashMap<Integer, HRESULT>(){{
+        put(0x00000000,S_OK);
+        put(0x80004004,E_ABORT);
+        put(0x80070005,E_ACCESSDENIED);
+        put(0x80004005,E_FAIL);
+        put(0x80070006,E_HANDLE);
+        put(0x80070057,E_INVALIDARG);
+        put(0x80004002,E_NOINTERFACE);
+        put(0x80004001,E_NOTIMPL);
+        put(0x8007000E,E_OUTOFMEMORY);
+        put(0x80004003,E_POINTER);
+        put(0x8000FFFF,E_UNEXPECTED);
+        put(0xFF040001,E_PAGENOTACTIVE);
+        put(0xFF04006F,E_BUFFERTOOSMALL);
+    }};
+
+    public static HRESULT of(int code){
+        HRESULT result = lookup.get(code);
+        return result!=null?result:E_UNEXPECTED;
     }
 
-    public String getDescription() {
-        return description;
+    @Override
+    public String toString() {
+        return "["+name()+"] "+description;
     }
-
-    public int getCode() {
-        return code;
-    }
-
 }
