@@ -31,7 +31,11 @@ public class InputDemo {
     Pointer device;
 
     DirectOutputLibrary.Pfn_DirectOutput_SoftButtonChange softButtonChange =
-            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> printOutput(dwButtons);
+            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> printSoftButton(dwButtons);
+
+    DirectOutputLibrary.Pfn_DirectOutput_PageChange pageChange =
+            (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> printPageChange(dwPage,bSetActive);
+
 
     public InputDemo(ProFlightInstrumentPanel flightInstrumentPanel) {
         this.directOutput = flightInstrumentPanel.getDirectOutput();
@@ -42,12 +46,18 @@ public class InputDemo {
         LOGGER.info("Running input demo.");
         LOGGER.info("Try the buttons on the device or press ENTER to continue.");
         directOutput.DirectOutput_RegisterSoftButtonCallback(device, softButtonChange, Pointer.NULL);
-        printOutput(0);
+        directOutput.DirectOutput_RegisterPageCallback(device,pageChange,Pointer.NULL);
+        printSoftButton(0);
         waitForEnter();
     }
 
-    private void printOutput(int dwButtons) {
-        LOGGER.debug(String.valueOf(dwButtons));
+    private void printSoftButton(int dwButtons) {
+        LOGGER.debug("Soft Button State: {}",dwButtons);
+    }
+
+    private void printPageChange(int dwPage, byte bSetActive) {
+        LOGGER.debug("Page Change - Page: {}",dwPage);
+        LOGGER.debug("Page Change - SetActive: {}",bSetActive);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
