@@ -6,7 +6,6 @@ import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Console;
 import java.io.IOException;
 
 /**
@@ -31,6 +30,9 @@ public class InputDemo {
     DirectOutputLibrary directOutput;
     Pointer device;
 
+    DirectOutputLibrary.Pfn_DirectOutput_SoftButtonChange softButtonChange =
+            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> printOutput(dwButtons);
+
     public InputDemo(ProFlightInstrumentPanel flightInstrumentPanel) {
         this.directOutput = flightInstrumentPanel.getDirectOutput();
         this.device = flightInstrumentPanel.getDevice();
@@ -38,12 +40,8 @@ public class InputDemo {
 
     public void run() throws InterruptedException {
         LOGGER.info("Running input demo.");
-        System.out.println("Try the buttons on the device or press ENTER to continue . . .");
-        directOutput.DirectOutput_RegisterSoftButtonCallback(
-                device,
-                (Pointer hDevice, int dwButtons, Pointer pCtxt) ->
-                        printOutput(dwButtons),
-                Pointer.NULL);
+        LOGGER.info("Try the buttons on the device or press ENTER to continue.");
+        directOutput.DirectOutput_RegisterSoftButtonCallback(device, softButtonChange, Pointer.NULL);
         printOutput(0);
         waitForEnter();
     }
@@ -52,10 +50,11 @@ public class InputDemo {
         LOGGER.debug(String.valueOf(dwButtons));
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private static void waitForEnter() {
         try {
             System.in.read();
-        } catch (IOException e) {
+        } catch (IOException ignore) {
 
         }
     }
