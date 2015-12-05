@@ -1,10 +1,14 @@
 package ch.poiuqwer.saitek.fip4j;
 
-import ch.poiuqwer.saitek.fip4j.demo.NightRiderDemo;
+import ch.poiuqwer.saitek.fip4j.demo.InputDemo;
+import ch.poiuqwer.saitek.fip4j.demo.LedDemo;
+import ch.poiuqwer.saitek.fip4j.demo.ScreenDemo;
 import ch.poiuqwer.saitek.fip4j.impl.*;
+import com.sun.jna.WString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,7 +40,12 @@ public class Main {
                 Set<Device> devices = DeviceLocator.findProFlightInstrumentPanel(directOutput.get());
                 for (Device device : devices){
                     ProFlightInstrumentPanel fip = new ProFlightInstrumentPanel(directOutput.get(),device);
-                    runDemos(fip);
+                    openPage(device, fip);
+                    try {
+                        runDemos(fip);
+                    } finally {
+                        closePage(device, fip);
+                    }
                 }
             }
         } catch (Throwable t){
@@ -49,9 +58,21 @@ public class Main {
         }
     }
 
-    private static void runDemos(ProFlightInstrumentPanel fip) throws InterruptedException {
+    private static void closePage(Device device, ProFlightInstrumentPanel fip) {
+        fip.getDirectOutput().DirectOutput_RemovePage(device.getPointer(), 0);
+    }
+
+    private static void openPage(Device device, ProFlightInstrumentPanel fip) {
+        fip.getDirectOutput().DirectOutput_AddPage(device.getPointer(), 0, new WString("Test"), DirectOutputLibrary.FLAG_SET_AS_ACTIVE);
+        fip.getDirectOutput().DirectOutput_SetLed(device.getPointer(), 0, 7, 0);
+        fip.getDirectOutput().DirectOutput_SetLed(device.getPointer(), 0, 8, 0);
+    }
+
+    private static void runDemos(ProFlightInstrumentPanel fip) throws InterruptedException, IOException {
         LOGGER.info("Running demos.");
-        new NightRiderDemo(fip).run();
+        new LedDemo(fip).run();
+        new ScreenDemo(fip).run();
+        new InputDemo(fip).run();
     }
 
 }
