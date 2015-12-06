@@ -164,7 +164,7 @@ public interface DirectOutputLibrary extends StdCallLibrary {
      * @param hDevice opaque device handle
      * @param dwPage caller assigned page id to add
      * @param wszDebugName Only used for debugging, can be null
-     * @param dwFlags flags ( 0 | FLAG_SET_AS_ACTIVE )
+     * @param dwFlags flags ( 0 | PAGE_ACTIVE )
      * @return S_OK : succeeded<br>
      *     E_HANDLE : hDevice is not a valid device handle
      */

@@ -29,46 +29,40 @@ import java.util.Set;
  */
 public class Main {
 
+    public static final String PLUGIN_NAME = "Saitek-FIP4j";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
+    private static DirectOutput directOutput = null;
+
     public static void main(String[] args) {
-        LOGGER.info("Starting Saitek-FIP4j.");
-        Optional<DirectOutput> directOutput = Optional.empty();
+
+        LOGGER.info("Starting {}.", PLUGIN_NAME);
         try {
             directOutput = LibraryManager.load();
-            if (directOutput.isPresent()) {
-                Set<Device> devices = DeviceLocator.findProFlightInstrumentPanel(directOutput.get());
-                for (Device device : devices){
-                    ProFlightInstrumentPanel fip = new ProFlightInstrumentPanel(directOutput.get(),device);
-                    openPage(device, fip);
+            directOutput.initialize(PLUGIN_NAME);
+            try {
+                Set<Device> devices = DeviceLocator.findProFlightInstrumentPanel(directOutput);
+                for (Device device : devices) {
+                    FIP fip = new FIP(directOutput, device);
+                    directOutput.addPage(device,0,PageState.ACTIVE);
                     try {
                         runDemos(fip);
                     } finally {
-                        closePage(device, fip);
+                        directOutput.removePage(device,0);
                     }
                 }
+            } catch (Throwable t){
+                LOGGER.error("Unexpected error.", t);
+            } finally {
+                directOutput.deinitialize();
             }
-        } catch (Throwable t){
-            LOGGER.error("An unexpected error occurred.", t);
-        } finally {
-            if (directOutput.isPresent()){
-                directOutput.get().deinitialize();
-            }
-            LOGGER.info("Quitting Saitek-FIP4j.");
+        } catch (IllegalStateException ignore){
+            // already logged
         }
     }
 
-    private static void closePage(Device device, ProFlightInstrumentPanel fip) {
-        fip.getDirectOutput().DirectOutput_RemovePage(device.getPointer(), 0);
-    }
-
-    private static void openPage(Device device, ProFlightInstrumentPanel fip) {
-        fip.getDirectOutput().DirectOutput_AddPage(device.getPointer(), 0, new WString("Test"), DirectOutputLibrary.FLAG_SET_AS_ACTIVE);
-        fip.getDirectOutput().DirectOutput_SetLed(device.getPointer(), 0, 7, 0);
-        fip.getDirectOutput().DirectOutput_SetLed(device.getPointer(), 0, 8, 0);
-    }
-
-    private static void runDemos(ProFlightInstrumentPanel fip) throws InterruptedException, IOException {
+    private static void runDemos(FIP fip) throws InterruptedException, IOException {
         LOGGER.info("Running demos.");
         new LedDemo(fip).run();
         new ScreenDemo(fip).run();

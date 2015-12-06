@@ -1,7 +1,7 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.ProFlightInstrumentPanel;
-import ch.poiuqwer.saitek.fip4j.impl.DirectOutputLibrary;
+import ch.poiuqwer.saitek.fip4j.FIP;
+import ch.poiuqwer.saitek.fip4j.impl.*;
 import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,37 +25,43 @@ public class LedDemo {
 
     private static Logger LOGGER = LoggerFactory.getLogger(LedDemo.class);
 
-    DirectOutputLibrary directOutput;
-    Pointer device;
+    DirectOutput directOutput;
+    Device device;
+    Page page;
 
-    public LedDemo(ProFlightInstrumentPanel flightInstrumentPanel) {
-        this.directOutput = flightInstrumentPanel.getDirectOutput();
-        this.device = flightInstrumentPanel.getDevice();
+    public LedDemo(FIP fip) {
+        this.directOutput = fip.getDirectOutput();
+        this.device = fip.getDevice();
+        this.page = fip.getPage();
     }
 
     public void run() throws InterruptedException {
         LOGGER.info("Running LED demo.");
-        for (int i = 0; i <= 10; i++) {
-            directOutput.DirectOutput_SetLed(device, 0, 7+(i%2), 1);
-            directOutput.DirectOutput_SetLed(device, 0, 7+((i+1)%2), 0);
+        for (int i = 0; i <= 5; i++) {
+            directOutput.setLed(device, page, Button.UP);
+            directOutput.clearLed(device,page, Button.DOWN);
+            Thread.sleep(200);
+            directOutput.setLed(device, page, Button.DOWN);
+            directOutput.clearLed(device,page, Button.UP);
             Thread.sleep(200);
         }
-        directOutput.DirectOutput_SetLed(device, 0, 7, 0);
+        directOutput.clearLed(device, page, Button.UP);
+        directOutput.clearLed(device, page, Button.DOWN);
         for (int j = 0; j < 3; j++) {
             Thread.sleep(200);
             for (int i = 2; i <= 6; i++) {
-                directOutput.DirectOutput_SetLed(device, 0, i, 1);
-                directOutput.DirectOutput_SetLed(device, 0, i - 1, 0);
+                directOutput.setLed(device, page, Button.number(i));
+                directOutput.clearLed(device, page, Button.number(i-1));
                 Thread.sleep(50);
             }
             Thread.sleep(200);
             for (int i = 5; i >= 1; i--) {
-                directOutput.DirectOutput_SetLed(device, 0, i, 1);
-                directOutput.DirectOutput_SetLed(device, 0, i + 1, 0);
+                directOutput.setLed(device, page, Button.number(i));
+                directOutput.clearLed(device, page, Button.number(i+1));
                 Thread.sleep(50);
             }
         }
-        directOutput.DirectOutput_SetLed(device, 0, 1, 0);
+        directOutput.clearLed(device, page, Button.S1);
     }
 
 }

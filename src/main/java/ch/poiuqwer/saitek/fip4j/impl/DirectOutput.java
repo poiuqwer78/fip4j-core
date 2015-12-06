@@ -1,8 +1,13 @@
 package ch.poiuqwer.saitek.fip4j.impl;
 
+import com.google.common.base.Preconditions;
+import com.sun.jna.Memory;
 import com.sun.jna.WString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -21,6 +26,10 @@ import org.slf4j.LoggerFactory;
  */
 public class DirectOutput {
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectOutput.class);
+
+    private static final int WIDTH = 320;
+    private static final int HEIGHT = 240;
+    private static final int COLOR_DEPTH = 3;
 
     public final DirectOutputLibrary dll;
 
@@ -55,5 +64,46 @@ public class DirectOutput {
         return call(dll.DirectOutput_Deinitialize());
     }
 
+    public HRESULT addPage(Device device, int index, PageState state) {
+        return call(dll.DirectOutput_AddPage(device.getPointer(),index,new WString(Integer.toString(index)),state.getValue()));
+    }
+
+    public HRESULT removePage(Device device, int index) {
+        return call(dll.DirectOutput_RemovePage(device.getPointer(),index));
+    }
+
+    public HRESULT setLed(Device device, Page page, Button button){
+        return call(dll.DirectOutput_SetLed(device.getPointer(),page.getIndex(),button.getLed(),1));
+    }
+
+    public HRESULT clearLed(Device device, Page page, Button button){
+        return call(dll.DirectOutput_SetLed(device.getPointer(),page.getIndex(),button.getLed(),0));
+    }
+
+    public HRESULT setImage(Device device, Page page, BufferedImage bufferedImage){
+        Preconditions.checkArgument(bufferedImage.getType()==BufferedImage.TYPE_3BYTE_BGR);
+        Preconditions.checkArgument(bufferedImage.getWidth()==WIDTH);
+        Preconditions.checkArgument(bufferedImage.getHeight()==HEIGHT);
+        byte[] bytes = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+        int size = bytes.length;
+        Memory memory = new Memory(size);
+        writeBytesToMemory(bytes, size, memory);
+        return call(dll.DirectOutput_SetImage(device.getPointer(),page.getIndex(),0,size,memory));
+    }
+
+    public HRESULT clearImage(Device device, Page page){
+        int size = WIDTH*HEIGHT*COLOR_DEPTH;
+        Memory memory = new Memory(size);
+        memory.clear();
+        return call(dll.DirectOutput_SetImage(device.getPointer(),page.getIndex(),0,size,memory));
+    }
+
+    private void writeBytesToMemory(byte[] bytes, int size, Memory imagePointer) {
+        int lineLength = WIDTH * COLOR_DEPTH;
+        int pointerOffset = size - lineLength;
+        for (int i = 0; i < HEIGHT; i++) {
+            imagePointer.write(pointerOffset - (i * lineLength), bytes, i * lineLength, lineLength);
+        }
+    }
 
 }

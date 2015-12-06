@@ -3,6 +3,7 @@ package ch.poiuqwer.saitek.fip4j;
 import ch.poiuqwer.saitek.fip4j.impl.Device;
 import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
 import ch.poiuqwer.saitek.fip4j.impl.DirectOutputLibrary;
+import ch.poiuqwer.saitek.fip4j.impl.Page;
 import com.sun.jna.Pointer;
 
 /**
@@ -20,21 +21,26 @@ import com.sun.jna.Pointer;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class ProFlightInstrumentPanel {
+public class FIP {
 
-    private DirectOutputLibrary directOutput;
-    private Pointer device;
+    private final DirectOutput directOutput;
+    private final Device device;
+    private final Page page = new Page(0);
 
-    public ProFlightInstrumentPanel(DirectOutput directOutput, Device device) {
-        this.directOutput = directOutput.dll;
-        this.device = device.getPointer();
+    public FIP(DirectOutput directOutput, Device device) {
+        this.directOutput = directOutput;
+        this.device = device;
     }
 
-    public Pointer getDevice() {
+    public Device getDevice() {
         return device;
     }
 
-    public DirectOutputLibrary getDirectOutput() {
+    public Page getPage() {
+        return page;
+    }
+
+    public DirectOutput getDirectOutput() {
         return directOutput;
     }
 }

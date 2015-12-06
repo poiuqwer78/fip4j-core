@@ -25,19 +25,16 @@ import java.util.Optional;
  */
 public class LibraryManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(LibraryManager.class);
-    public static final String PLUGIN_NAME = "Saitek-FIP4j";
 
-    public static Optional<DirectOutput> load(){
+    public static DirectOutput load(){
         LOGGER.debug("Loading DirectOutput library.");
         System.setProperty("jna.library.path", WindowsRegistry.getLibraryPath());
         try {
-            DirectOutput directOutput = loadLibrary();
-            directOutput.initialize(PLUGIN_NAME);
-            return Optional.of(directOutput);
+            return loadLibrary();
         } catch (Throwable t) {
             LOGGER.error("Unable to load DirectOutput.dll (running on {} - {} - {}).", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"), t);
+            throw new IllegalStateException(t);
         }
-        return Optional.empty();
     }
 
     private static DirectOutput loadLibrary() {

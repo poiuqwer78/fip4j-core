@@ -1,6 +1,8 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.ProFlightInstrumentPanel;
+import ch.poiuqwer.saitek.fip4j.FIP;
+import ch.poiuqwer.saitek.fip4j.impl.Device;
+import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
 import ch.poiuqwer.saitek.fip4j.impl.DirectOutputLibrary;
 import com.sun.jna.Pointer;
 import org.slf4j.Logger;
@@ -27,8 +29,8 @@ public class InputDemo {
 
     private static Logger LOGGER = LoggerFactory.getLogger(InputDemo.class);
 
-    DirectOutputLibrary directOutput;
-    Pointer device;
+    DirectOutput directOutput;
+    Device device;
 
     DirectOutputLibrary.Pfn_DirectOutput_SoftButtonChange softButtonChange =
             (Pointer hDevice, int dwButtons, Pointer pCtxt) -> printSoftButton(dwButtons);
@@ -37,7 +39,7 @@ public class InputDemo {
             (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> printPageChange(dwPage,bSetActive);
 
 
-    public InputDemo(ProFlightInstrumentPanel flightInstrumentPanel) {
+    public InputDemo(FIP flightInstrumentPanel) {
         this.directOutput = flightInstrumentPanel.getDirectOutput();
         this.device = flightInstrumentPanel.getDevice();
     }
@@ -45,8 +47,8 @@ public class InputDemo {
     public void run() throws InterruptedException {
         LOGGER.info("Running input demo.");
         LOGGER.info("Try the buttons on the device or press ENTER to continue.");
-        directOutput.DirectOutput_RegisterSoftButtonCallback(device, softButtonChange, Pointer.NULL);
-        directOutput.DirectOutput_RegisterPageCallback(device,pageChange,Pointer.NULL);
+        directOutput.dll.DirectOutput_RegisterSoftButtonCallback(device.getPointer(), softButtonChange, Pointer.NULL);
+        directOutput.dll.DirectOutput_RegisterPageCallback(device.getPointer(),pageChange,Pointer.NULL);
         printSoftButton(0);
         waitForEnter();
     }
@@ -56,8 +58,7 @@ public class InputDemo {
     }
 
     private void printPageChange(int dwPage, byte bSetActive) {
-        LOGGER.debug("Page Change - Page: {}",dwPage);
-        LOGGER.debug("Page Change - SetActive: {}",bSetActive);
+        LOGGER.debug("Page Change - Page: {} Active: {}",dwPage, bSetActive);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
