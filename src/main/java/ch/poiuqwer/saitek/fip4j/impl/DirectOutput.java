@@ -37,25 +37,6 @@ public class DirectOutput {
         this.dll = dll;
     }
 
-    public HRESULT call(int code) {
-        HRESULT result = HRESULT.of(code);
-        switch (result){
-            case S_OK:
-                if (LOGGER.isDebugEnabled()) {
-                    // Expensive operation, only perform if logging really happens on this level.
-                    String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
-                    LOGGER.debug("Call '{}' {}", methodName, result);
-                }
-                break;
-            default:
-                String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
-                LOGGER.error("Call '{}' {}",methodName,result);
-        }
-        return result;
-    }
-
-    //// Wrappers for low-level calls ////
-
     public HRESULT initialize(String pluginName){
         return call(dll.DirectOutput_Initialize(new WString(pluginName)));
     }
@@ -72,11 +53,11 @@ public class DirectOutput {
         return call(dll.DirectOutput_RemovePage(device.getPointer(),index));
     }
 
-    public HRESULT setLed(Device device, Page page, Button button){
+    public HRESULT activateButton(Device device, Page page, Button button){
         return call(dll.DirectOutput_SetLed(device.getPointer(),page.getIndex(),button.getLed(),1));
     }
 
-    public HRESULT clearLed(Device device, Page page, Button button){
+    public HRESULT deactivateButton(Device device, Page page, Button button){
         return call(dll.DirectOutput_SetLed(device.getPointer(),page.getIndex(),button.getLed(),0));
     }
 
@@ -104,6 +85,23 @@ public class DirectOutput {
         for (int i = 0; i < HEIGHT; i++) {
             imagePointer.write(pointerOffset - (i * lineLength), bytes, i * lineLength, lineLength);
         }
+    }
+
+    private HRESULT call(int code) {
+        HRESULT result = HRESULT.of(code);
+        switch (result){
+            case S_OK:
+                if (LOGGER.isDebugEnabled()) {
+                    // Expensive operation, only perform if logging really happens on this level.
+                    String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
+                    LOGGER.debug("Call '{}' {}", methodName, result);
+                }
+                break;
+            default:
+                String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
+                LOGGER.error("Call '{}' {}",methodName,result);
+        }
+        return result;
     }
 
 }

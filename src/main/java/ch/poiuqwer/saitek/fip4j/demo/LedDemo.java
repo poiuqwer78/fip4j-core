@@ -2,9 +2,10 @@ package ch.poiuqwer.saitek.fip4j.demo;
 
 import ch.poiuqwer.saitek.fip4j.FIP;
 import ch.poiuqwer.saitek.fip4j.impl.*;
-import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static ch.poiuqwer.saitek.fip4j.impl.Button.*;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -37,31 +38,32 @@ public class LedDemo {
 
     public void run() throws InterruptedException {
         LOGGER.info("Running LED demo.");
-        for (int i = 0; i <= 5; i++) {
-            directOutput.setLed(device, page, Button.UP);
-            directOutput.clearLed(device,page, Button.DOWN);
+        for (int i = 0; i < 1; i++) {
+            directOutput.activateButton(device, page, UP);
+            directOutput.deactivateButton(device,page, DOWN);
             Thread.sleep(200);
-            directOutput.setLed(device, page, Button.DOWN);
-            directOutput.clearLed(device,page, Button.UP);
+            directOutput.activateButton(device, page, DOWN);
+            directOutput.deactivateButton(device,page, UP);
             Thread.sleep(200);
         }
-        directOutput.clearLed(device, page, Button.UP);
-        directOutput.clearLed(device, page, Button.DOWN);
-        for (int j = 0; j < 3; j++) {
+        directOutput.deactivateButton(device, page, UP);
+        directOutput.deactivateButton(device, page, DOWN);
+        for (int j = 0; j < 1; j++) {
             Thread.sleep(200);
             for (int i = 2; i <= 6; i++) {
-                directOutput.setLed(device, page, Button.number(i));
-                directOutput.clearLed(device, page, Button.number(i-1));
+                directOutput.activateButton(device, page, S(i));
+                directOutput.deactivateButton(device, page, S(i-1));
                 Thread.sleep(50);
             }
             Thread.sleep(200);
             for (int i = 5; i >= 1; i--) {
-                directOutput.setLed(device, page, Button.number(i));
-                directOutput.clearLed(device, page, Button.number(i+1));
+                directOutput.activateButton(device, page, S(i));
+                directOutput.deactivateButton(device, page, S(i+1));
                 Thread.sleep(50);
             }
         }
-        directOutput.clearLed(device, page, Button.S1);
+        Thread.sleep(200);
+        directOutput.deactivateButton(device, page, S1);
     }
 
 }

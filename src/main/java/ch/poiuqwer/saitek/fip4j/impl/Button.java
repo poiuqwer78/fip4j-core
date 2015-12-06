@@ -36,7 +36,7 @@ public enum Button {
         this.led = led;
     }
 
-    public static Button number(int i){
+    public static Button S(int i){
         Preconditions.checkArgument(i>=0 && i <=6);
         return Button.valueOf("S"+i);
     }
