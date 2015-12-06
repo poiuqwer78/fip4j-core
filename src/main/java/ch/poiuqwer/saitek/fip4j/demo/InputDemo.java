@@ -37,6 +37,7 @@ public class InputDemo {
 
     DirectOutputLibrary.Pfn_DirectOutput_PageChange pageChange =
             (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> printPageChange(dwPage,bSetActive);
+    private transient boolean waitForKey;
 
 
     public InputDemo(FIP flightInstrumentPanel) {
@@ -46,28 +47,26 @@ public class InputDemo {
 
     public void run() throws InterruptedException {
         LOGGER.info("Running input demo.");
-        LOGGER.info("Try the buttons on the device or press ENTER to continue.");
+        LOGGER.info("Try the buttons on the device.");
+        LOGGER.info("Program stops if no action is performed on the device for more than five seconds.");
         directOutput.dll.DirectOutput_RegisterSoftButtonCallback(device.getPointer(), softButtonChange, Pointer.NULL);
         directOutput.dll.DirectOutput_RegisterPageCallback(device.getPointer(),pageChange,Pointer.NULL);
-        printSoftButton(0);
-        waitForEnter();
+        waitForKey=true;
+        while (waitForKey){
+            waitForKey=false;
+            Thread.sleep(5000);
+        }
+        LOGGER.info("Inactivity for more than five seconds. Stopping input demo.");
     }
 
     private void printSoftButton(int dwButtons) {
         LOGGER.debug("Soft Button State: {}",dwButtons);
+        waitForKey=true;
     }
 
     private void printPageChange(int dwPage, byte bSetActive) {
         LOGGER.debug("Page Change - Page: {} Active: {}",dwPage, bSetActive);
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void waitForEnter() {
-        try {
-            System.in.read();
-        } catch (IOException ignore) {
-
-        }
+        waitForKey=true;
     }
 
 }
