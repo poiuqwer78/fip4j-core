@@ -29,44 +29,103 @@ import java.util.*;
 public class DirectOutput {
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectOutput.class);
 
-    public static final GUID FIP = GUID.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
-    public static final GUID X52 = GUID.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
-    public static final int DISPLAY_WIDTH = 320;
-    public static final int DISPLAY_HEIGHT = 240;
-    public static final int DISPLAY_COLOR_DEPTH = 3;
+    private static final GUID FIP = GUID.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
+    private static final GUID X52 = GUID.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
+    private static final int DISPLAY_WIDTH = 320;
+    private static final int DISPLAY_HEIGHT = 240;
+    private static final int DISPLAY_COLOR_DEPTH = 3;
 
     private final Library dll;
 
-    private Map<Pointer, Device> devices = new HashMap<>();
+    private final Map<Pointer, Device> devices = new HashMap<>();
+
+    private final Set<DeviceChangeEventHandler> deviceChangeEventHandlers = new HashSet<>();
 
     public DirectOutput(Library dll) {
         this.dll = dll;
     }
 
-    private final Library.Pfn_DirectOutput_DeviceChange deviceChangeCallback = (hDevice, bAdded, pCtxt) -> {
+    private final Library.Pfn_DirectOutput_DeviceChange deviceChangeCallback =
+            (hDevice, bAdded, pCtxt) -> handleDeviceChange(hDevice, bAdded);
+
+    private final Library.Pfn_DirectOutput_SoftButtonChange softButtonCallback =
+            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> fireSoftButtonEvents(hDevice, dwButtons);
+
+    private final Library.Pfn_DirectOutput_PageChange pageChangeCallback =
+            (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> firePageChangeEvents(hDevice, dwPage, bSetActive);
+
+    private void handleDeviceChange(Pointer hDevice, byte bAdded) {
         if (bAdded == 1) {
-            if (isFlightInstrumentPanel(hDevice)) {
-                Device device = buildDevice(hDevice);
-                devices.put(hDevice, device);
-            }
+            handleDeviceConnected(hDevice);
         } else {
-            if (devices.containsKey(hDevice)) {
-                LOGGER.info("Device removed: {}", devices.get(hDevice).toString());
-                devices.remove(hDevice);
+            handleDeviceDisconnected(hDevice);
+        }
+    }
+
+    private void handleDeviceDisconnected(Pointer hDevice) {
+        if (devices.containsKey(hDevice)) {
+            LOGGER.info("Device disconnected: {}", devices.get(hDevice).toString());
+            Device device = devices.remove(hDevice);
+            device.disconnect();
+            for (DeviceChangeEventHandler handler : deviceChangeEventHandlers) {
+                handler.deviceDisconnected(device);
             }
         }
-    };
+    }
+
+    private void handleDeviceConnected(Pointer hDevice) {
+        if (isFlightInstrumentPanel(hDevice)) {
+            Device device = setupDevice(hDevice);
+            devices.put(hDevice, device);
+            for (DeviceChangeEventHandler handler : deviceChangeEventHandlers) {
+                handler.deviceConnected(device);
+            }
+        }
+    }
+
+    public void addDeviceChangeEventHandler(DeviceChangeEventHandler handler) {
+        deviceChangeEventHandlers.add(handler);
+    }
+
+    public void removeDeviceChangeEventHandler(DeviceChangeEventHandler handler) {
+        deviceChangeEventHandlers.remove(handler);
+    }
+
+    private void fireSoftButtonEvents(Pointer hDevice, int dwButtons) {
+        LOGGER.debug("Soft Button State: {}", dwButtons);
+        Device device = devices.get(hDevice);
+        if (device != null) {
+            device.fireSoftButtonEventHandlers(dwButtons);
+        }
+    }
+
+    private void firePageChangeEvents(Pointer hDevice, int dwPage, byte bSetActive) {
+        LOGGER.debug("Page Change - Page: {} Active: {}", dwPage, bSetActive);
+        Device device = devices.get(hDevice);
+        if (device != null) {
+            device.firePageChangeEventHandlers(dwPage, bSetActive);
+        }
+    }
 
     private HRESULT result;
 
+    @SuppressWarnings("unused")
     public HRESULT getResult() {
         return result;
     }
 
-    public void initialize(String pluginName) {
-        call(dll.DirectOutput_Initialize(new WString(pluginName)));
-        loadDevices();
+    public void setup(String pluginName) {
+        initialize(pluginName);
+        enumerateDevices();
+        registerDeviceChangeCallback();
+    }
+
+    private void registerDeviceChangeCallback() {
         call(dll.DirectOutput_RegisterDeviceCallback(deviceChangeCallback, null));
+    }
+
+    private void initialize(String pluginName) {
+        call(dll.DirectOutput_Initialize(new WString(pluginName)));
     }
 
     public void deinitialize() {
@@ -77,14 +136,14 @@ public class DirectOutput {
         return Collections.unmodifiableCollection(devices.values());
     }
 
-    public void loadDevices() {
+    private void enumerateDevices() {
         List<Pointer> devicePointers = new ArrayList<>();
         call(dll.DirectOutput_Enumerate((hDevice, pCtxt) -> devicePointers.add(hDevice), null));
         if (devicePointers.size() > 0) {
             LOGGER.debug("Found {} device(s). Will check if they are Saitek Pro Flight Instrument Panels.", devicePointers.size());
             for (Pointer devicePointer : devicePointers) {
                 if (isFlightInstrumentPanel(devicePointer)) {
-                    Device device = buildDevice(devicePointer);
+                    Device device = setupDevice(devicePointer);
                     devices.put(devicePointer, device);
                 }
             }
@@ -95,16 +154,27 @@ public class DirectOutput {
 
     }
 
-    private Device buildDevice(Pointer devicePointer) {
-        GUID deviceGUID = getDeviceGuid(devicePointer);
+    private Device setupDevice(Pointer devicePointer) {
         String serialNumber = getSerialNumber(devicePointer);
-        Device result = new Device(devicePointer, deviceGUID, serialNumber);
-        LOGGER.info(result.toString());
+        Device result = new Device(devicePointer, serialNumber);
+        registerSoftButtonCallback(devicePointer);
+        registerPageChangeCallback(devicePointer);
+        LOGGER.info("Device connected: {}", result.toString());
         return result;
     }
 
+    private void registerPageChangeCallback(Pointer devicePointer) {
+        call(dll.DirectOutput_RegisterPageCallback(devicePointer, pageChangeCallback, null));
+    }
+
+    private void registerSoftButtonCallback(Pointer devicePointer) {
+        call(dll.DirectOutput_RegisterSoftButtonCallback(devicePointer, softButtonCallback, null));
+    }
+
+
     private String getSerialNumber(Pointer devicePointer) {
         Memory serialNumberMemory = new Memory(32);
+        serialNumberMemory.clear();
         char[] serialNumberCharArray = new char[16];
         call(dll.DirectOutput_GetSerialNumber(devicePointer, serialNumberMemory, 16));
         serialNumberMemory.read(0, serialNumberCharArray, 0, 16);
@@ -113,12 +183,15 @@ public class DirectOutput {
 
     private GUID getTypeGuid(Pointer devicePointer) {
         Memory guidMemory = new Memory(16);
+        guidMemory.clear();
         call(dll.DirectOutput_GetDeviceType(devicePointer, guidMemory));
         return GUID.fromBinary(guidMemory.getByteArray(0, 16));
     }
 
+    @SuppressWarnings("unused")
     private GUID getDeviceGuid(Pointer devicePointer) {
         Memory guidMemory = new Memory(16);
+        guidMemory.clear();
         call(dll.DirectOutput_GetDeviceInstance(devicePointer, guidMemory));
         return GUID.fromBinary(guidMemory.getByteArray(0, 16));
     }
@@ -154,8 +227,8 @@ public class DirectOutput {
         call(dll.DirectOutput_SetLed(
                 page.getDevice().getPointer(),
                 page.getIndex(),
-                button.getLed(),
-                state.getValue()));
+                button.LED,
+                state.VALUE));
     }
 
     public void setImage(Page page, BufferedImage image) {

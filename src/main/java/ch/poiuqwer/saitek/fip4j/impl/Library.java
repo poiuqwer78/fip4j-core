@@ -154,7 +154,7 @@ public interface Library extends StdCallLibrary {
      *
      * @param hDevice opaque device handle
      * @param pszSerialNumber String buffer to hold the serial number of the device. The String can be empty if no serial number associated with the device.
-     * @param dwSize Specify the number of characters of the string buffer. The value of this parameter shouldn't be greater than 16. Otherwise, the string buffer is truncated into 16 characters.
+     * @param dwSize Specify the number of characters of the string buffer. The VALUE of this parameter shouldn't be greater than 16. Otherwise, the string buffer is truncated into 16 characters.
      * @return S_OK : succeeded
      */
     int DirectOutput_GetSerialNumber(Pointer hDevice, Pointer pszSerialNumber, int dwSize);
@@ -183,9 +183,9 @@ public interface Library extends StdCallLibrary {
     /**
      * Set the state of a LED on the device
      * @param hDevice opaque device handle
-     * @param dwPage page to display the led on
-     * @param dwIndex index of the led (1 to 6: buttons, 7: page up, 8: page down)
-     * @param dwValue value of the led (0 is off, 1 is on)
+     * @param dwPage page to display the LED on
+     * @param dwIndex index of the LED (1 to 6: buttons, 7: page up, 8: page down)
+     * @param dwValue VALUE of the LED (0 is off, 1 is on)
      * @return S_OK : succeeded<br>
      *     E_HANDLE : hDevice is not a valid device handle<br>
      *     E_NOTIMPL : hDevice does not have any leds<br>

@@ -15,17 +15,10 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public enum KnobState {
+public interface PageChangeEventHandler {
 
-    LEFT(0x00000008,0x00000010),
-    RIGHT(0x00000004,0x00000002);
+    void pageActivated(Page page);
 
-    public final int COUNTER_CLOCK_WISE;
-    public final int CLOCK_WISE;
-
-    KnobState(int ccw, int cw) {
-        this.COUNTER_CLOCK_WISE = ccw;
-        this.CLOCK_WISE = cw;
-    }
+    void pageDeactivated(Page page);
 
 }

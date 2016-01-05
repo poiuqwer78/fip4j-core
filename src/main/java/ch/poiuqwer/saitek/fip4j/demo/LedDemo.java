@@ -38,7 +38,7 @@ public class LedDemo {
 
     public void run() throws InterruptedException {
         LOGGER.info("Running LED demo.");
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 2; i++) {
             directOutput.setLed(page, UP, ON);
             directOutput.setLed(page, DOWN, OFF);
             Thread.sleep(200);

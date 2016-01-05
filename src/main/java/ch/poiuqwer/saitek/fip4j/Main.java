@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -39,7 +38,7 @@ public class Main {
             LOGGER.info("Starting {}.", PLUGIN_NAME);
             if (LibraryManager.loadDirectOutput()) {
                 directOutput = LibraryManager.getDirectOutput();
-                directOutput.initialize(PLUGIN_NAME);
+                directOutput.setup(PLUGIN_NAME);
                 Collection<Device> devices = directOutput.getDevices();
                 for (Device device : devices) {
                     Page page = new Page(device, 0);
@@ -62,7 +61,7 @@ public class Main {
         LOGGER.info("Running demos.");
         new LedDemo(page).run();
         new ScreenDemo(page).run();
-//        new InputDemo(page).run();
+        new InputDemo(page).run();
     }
 
 }

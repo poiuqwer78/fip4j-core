@@ -20,9 +20,19 @@ public class Page {
     private final int index;
     private final Device device;
 
+    private boolean active = true;
+
     public Page(Device device, int index) {
         this.index = index;
         this.device = device;
+    }
+
+    public void activate() {
+        active = true;
+    }
+
+    public void deactivate() {
+        active = false;
     }
 
     public int getIndex() {
@@ -32,7 +42,6 @@ public class Page {
     public Device getDevice() {
         return device;
     }
-
 
 
 }

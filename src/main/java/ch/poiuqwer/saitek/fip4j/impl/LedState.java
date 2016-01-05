@@ -18,13 +18,10 @@ package ch.poiuqwer.saitek.fip4j.impl;
 public enum LedState {
     ON(1), OFF(0);
 
-    private final int value;
+    public final int VALUE;
 
     LedState(int value) {
-        this.value = value;
+        this.VALUE = value;
     }
 
-    public int getValue() {
-        return value;
-    }
 }
