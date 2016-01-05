@@ -3,8 +3,6 @@ package ch.poiuqwer.saitek.fip4j.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import static ch.poiuqwer.saitek.fip4j.impl.Severity.*;
-
 /**
  * Copyright 2015 Hermann Lehner
  * <p>
@@ -36,7 +34,9 @@ public enum HRESULT {
 
     // Specific DirectOutput values
     E_PAGENOTACTIVE("Page not active"),
-    E_BUFFERTOOSMALL("Buffer too small");
+    E_BUFFERTOOSMALL("Buffer too small"),
+
+    W_UNKNOWN("Unknown return code");
 
     private final String description;
 
@@ -62,7 +62,7 @@ public enum HRESULT {
 
     public static HRESULT of(int code){
         HRESULT result = lookup.get(code);
-        return result!=null?result:E_UNEXPECTED;
+        return result != null ? result : W_UNKNOWN;
     }
 
     @Override

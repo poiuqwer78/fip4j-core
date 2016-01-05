@@ -4,12 +4,11 @@ import ch.poiuqwer.saitek.fip4j.demo.InputDemo;
 import ch.poiuqwer.saitek.fip4j.demo.LedDemo;
 import ch.poiuqwer.saitek.fip4j.demo.ScreenDemo;
 import ch.poiuqwer.saitek.fip4j.impl.*;
-import com.sun.jna.WString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -36,37 +35,34 @@ public class Main {
     private static DirectOutput directOutput = null;
 
     public static void main(String[] args) {
-
-        LOGGER.info("Starting {}.", PLUGIN_NAME);
         try {
-            directOutput = LibraryManager.load();
-            directOutput.initialize(PLUGIN_NAME);
-            try {
-                Set<Device> devices = DeviceLocator.findProFlightInstrumentPanel(directOutput);
+            LOGGER.info("Starting {}.", PLUGIN_NAME);
+            if (LibraryManager.loadDirectOutput()) {
+                directOutput = LibraryManager.getDirectOutput();
+                directOutput.initialize(PLUGIN_NAME);
+                Collection<Device> devices = directOutput.getDevices();
                 for (Device device : devices) {
-                    FIP fip = new FIP(directOutput, device);
-                    directOutput.addPage(device,0,PageState.ACTIVE);
+                    Page page = new Page(device, 0);
+                    directOutput.addPage(page, PageState.ACTIVE);
                     try {
-                        runDemos(fip);
+                        runDemos(page);
                     } finally {
-                        directOutput.removePage(device,0);
+                        directOutput.removePage(page);
                     }
                 }
-            } catch (Throwable t){
-                LOGGER.error("Unexpected error.", t);
-            } finally {
-                directOutput.deinitialize();
             }
-        } catch (IllegalStateException ignore){
-            // already logged
+        } catch (Throwable t) {
+            LOGGER.error("Unexpected error.", t);
+        } finally {
+            directOutput.deinitialize();
         }
     }
 
-    private static void runDemos(FIP fip) throws InterruptedException, IOException {
+    private static void runDemos(Page page) throws InterruptedException, IOException {
         LOGGER.info("Running demos.");
-        new LedDemo(fip).run();
-        new ScreenDemo(fip).run();
-        new InputDemo(fip).run();
+        new LedDemo(page).run();
+        new ScreenDemo(page).run();
+//        new InputDemo(page).run();
     }
 
 }

@@ -19,14 +19,14 @@ import com.google.common.base.Preconditions;
  */
 public enum Button {
 
-    S1(0x00000020,1),
-    S2(0x00000040,2),
-    S3(0x00000080,3),
-    S4(0x00000100,4),
-    S5(0x00000200,5),
-    S6(0x00000400,6),
-    UP(0x00000000,7),
-    DOWN(0x00000000,8);
+    S1(0x00000020, 1),
+    S2(0x00000040, 2),
+    S3(0x00000080, 3),
+    S4(0x00000100, 4),
+    S5(0x00000200, 5),
+    S6(0x00000400, 6),
+    UP(0x00000000, 7),
+    DOWN(0x00000000, 8);
 
     private final int value;
     private final int led;

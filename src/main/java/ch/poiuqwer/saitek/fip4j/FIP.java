@@ -2,9 +2,7 @@ package ch.poiuqwer.saitek.fip4j;
 
 import ch.poiuqwer.saitek.fip4j.impl.Device;
 import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
-import ch.poiuqwer.saitek.fip4j.impl.DirectOutputLibrary;
 import ch.poiuqwer.saitek.fip4j.impl.Page;
-import com.sun.jna.Pointer;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -25,11 +23,12 @@ public class FIP {
 
     private final DirectOutput directOutput;
     private final Device device;
-    private final Page page = new Page(0);
+    private final Page page;
 
     public FIP(DirectOutput directOutput, Device device) {
         this.directOutput = directOutput;
         this.device = device;
+        this.page = new Page(device, 0);
     }
 
     public Device getDevice() {

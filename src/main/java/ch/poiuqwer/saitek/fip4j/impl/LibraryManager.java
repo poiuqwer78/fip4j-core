@@ -2,11 +2,8 @@ package ch.poiuqwer.saitek.fip4j.impl;
 
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
-import com.sun.jna.WString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -26,20 +23,42 @@ import java.util.Optional;
 public class LibraryManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(LibraryManager.class);
 
-    public static DirectOutput load(){
+    private static DirectOutput directOutput;
+
+    /**
+     * For Testing
+     *
+     * @param library the mock/test implementation of the JNA Interface
+     */
+    public static void setLibraryForTesting(Library library) {
+        if (directOutput != null) {
+            directOutput.deinitialize();
+        }
+        directOutput = new DirectOutput(library);
+    }
+
+    /**
+     * Get direct output library. The first time, the library is loaded which is expensive. The subsequent calls to this
+     * method use the previously loaded library.
+     * If the directOutput library has been initialized using useLibrary(), this call returns the previously set library.
+     *
+     * @return the library to interact with Saitek FIPs
+     */
+    public static DirectOutput getDirectOutput() {
+        return directOutput;
+    }
+
+    public static boolean loadDirectOutput() {
         LOGGER.debug("Loading DirectOutput library.");
         System.setProperty("jna.library.path", WindowsRegistry.getLibraryPath());
         try {
-            return loadLibrary();
+            NativeLibrary.getInstance(Library.JNA_LIBRARY_NAME);
+            Library library = (Library) Native.loadLibrary(Library.JNA_LIBRARY_NAME, Library.class);
+            directOutput = new DirectOutput(library);
+            return true;
         } catch (Throwable t) {
             LOGGER.error("Unable to load DirectOutput.dll (running on {} - {} - {}).", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"), t);
-            throw new IllegalStateException(t);
         }
-    }
-
-    private static DirectOutput loadLibrary() {
-        NativeLibrary.getInstance(DirectOutputLibrary.JNA_LIBRARY_NAME);
-        DirectOutputLibrary library = (DirectOutputLibrary) Native.loadLibrary(DirectOutputLibrary.JNA_LIBRARY_NAME, DirectOutputLibrary.class);
-        return new DirectOutput(library);
+        return false;
     }
 }

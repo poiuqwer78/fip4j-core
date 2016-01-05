@@ -1,9 +1,6 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.FIP;
-import ch.poiuqwer.saitek.fip4j.impl.Device;
-import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
-import ch.poiuqwer.saitek.fip4j.impl.Page;
+import ch.poiuqwer.saitek.fip4j.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,13 +32,11 @@ public class ScreenDemo {
     private static Logger LOGGER = LoggerFactory.getLogger(ScreenDemo.class);
 
     DirectOutput directOutput;
-    Device device;
     Page page;
 
-    public ScreenDemo(FIP fip) {
-        this.directOutput = fip.getDirectOutput();
-        this.device = fip.getDevice();
-        this.page = fip.getPage();
+    public ScreenDemo(Page page) {
+        this.directOutput = LibraryManager.getDirectOutput();
+        this.page = page;
     }
 
     public void run() throws InterruptedException, IOException {
@@ -56,11 +51,11 @@ public class ScreenDemo {
         for (int i = 0; i < 1; i++) {
             for (BufferedImage anImg : img) {
                 g.drawImage(anImg, 0, 0, null);
-                directOutput.setImage(device, page, bufferedImage);
+                directOutput.setImage(page, bufferedImage);
                 Thread.sleep(500);
             }
         }
-        directOutput.clearImage(device,page);
+        directOutput.clearScreen(page);
     }
 
     private BufferedImage getBufferedImage() {

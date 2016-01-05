@@ -18,12 +18,13 @@ import com.sun.jna.PointerType;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class Device extends PointerType {
+public class Device {
     private final GUID guid;
     private final String serialNumber;
+    private final Pointer pointer;
 
-    public Device(Pointer devicePointer, GUID guid, String serialNumber) {
-        super(devicePointer);
+    public Device(Pointer pointer, GUID guid, String serialNumber) {
+        this.pointer = pointer;
         this.guid = guid;
         this.serialNumber = serialNumber;
     }
@@ -34,6 +35,10 @@ public class Device extends PointerType {
 
     public String getSerialNumber() {
         return serialNumber;
+    }
+
+    public Pointer getPointer() {
+        return pointer;
     }
 
     @Override

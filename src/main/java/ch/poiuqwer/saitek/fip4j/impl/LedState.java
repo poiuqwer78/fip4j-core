@@ -15,24 +15,16 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public enum Knob {
+public enum LedState {
+    ON(1), OFF(0);
 
-    LEFT(0x00000008,0x00000010),
-    RIGHT(0x00000004,0x00000002);
+    private final int value;
 
-    private final int downValue;
-    private final int upValue;
-
-    Knob(int downValue, int upValue){
-        this.downValue = downValue;
-        this.upValue = upValue;
+    LedState(int value) {
+        this.value = value;
     }
 
-    public int getDownValue() {
-        return downValue;
-    }
-
-    public int getUpValue() {
-        return upValue;
+    public int getValue() {
+        return value;
     }
 }

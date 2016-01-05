@@ -18,12 +18,21 @@ package ch.poiuqwer.saitek.fip4j.impl;
 public class Page {
 
     private final int index;
+    private final Device device;
 
-    public Page(int index) {
+    public Page(Device device, int index) {
         this.index = index;
+        this.device = device;
     }
 
     public int getIndex() {
         return index;
     }
+
+    public Device getDevice() {
+        return device;
+    }
+
+
+
 }

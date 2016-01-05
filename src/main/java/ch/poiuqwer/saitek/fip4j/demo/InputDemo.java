@@ -1,14 +1,9 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.FIP;
-import ch.poiuqwer.saitek.fip4j.impl.Device;
-import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
-import ch.poiuqwer.saitek.fip4j.impl.DirectOutputLibrary;
+import ch.poiuqwer.saitek.fip4j.impl.*;
 import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -32,25 +27,24 @@ public class InputDemo {
     DirectOutput directOutput;
     Device device;
 
-    DirectOutputLibrary.Pfn_DirectOutput_SoftButtonChange softButtonChange =
+    Library.Pfn_DirectOutput_SoftButtonChange softButtonChange =
             (Pointer hDevice, int dwButtons, Pointer pCtxt) -> printSoftButton(dwButtons);
 
-    DirectOutputLibrary.Pfn_DirectOutput_PageChange pageChange =
+    Library.Pfn_DirectOutput_PageChange pageChange =
             (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> printPageChange(dwPage,bSetActive);
     private transient boolean waitForKey;
 
 
-    public InputDemo(FIP flightInstrumentPanel) {
-        this.directOutput = flightInstrumentPanel.getDirectOutput();
-        this.device = flightInstrumentPanel.getDevice();
+    public InputDemo(Page page) {
+        this.directOutput = LibraryManager.getDirectOutput();
     }
 
     public void run() throws InterruptedException {
         LOGGER.info("Running input demo.");
         LOGGER.info("Try the buttons on the device.");
         LOGGER.info("Program stops if no action is performed on the device for more than five seconds.");
-        directOutput.dll.DirectOutput_RegisterSoftButtonCallback(device.getPointer(), softButtonChange, Pointer.NULL);
-        directOutput.dll.DirectOutput_RegisterPageCallback(device.getPointer(),pageChange,Pointer.NULL);
+//        directOutput.dll.DirectOutput_RegisterSoftButtonCallback(device.getPointer(), softButtonChange, Pointer.NULL);
+//        directOutput.dll.DirectOutput_RegisterPageCallback(device.getPointer(),pageChange,Pointer.NULL);
         waitForKey=true;
         while (waitForKey){
             waitForKey=false;

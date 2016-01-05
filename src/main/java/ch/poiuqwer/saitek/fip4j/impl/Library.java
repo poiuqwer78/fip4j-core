@@ -25,7 +25,7 @@ import com.sun.jna.win32.StdCallLibrary;
  * For help, please visit <a href="http://nativelibs4java.googlecode.com/">NativeLibs4Java</a> , <a href="http://rococoa.dev.java.net/">Rococoa</a>, or <a href="http://jna.dev.java.net/">JNA</a>.
  */
 @SuppressWarnings("unused")
-public interface DirectOutputLibrary extends StdCallLibrary {
+public interface Library extends StdCallLibrary {
 
     String JNA_LIBRARY_NAME = "DirectOutput";
 
@@ -99,7 +99,7 @@ public interface DirectOutputLibrary extends StdCallLibrary {
      * @param pCtxt caller supplied context pointer, passed to the callback function
      * @return S_OK : succeeded
      */
-    int DirectOutput_RegisterDeviceCallback(DirectOutputLibrary.Pfn_DirectOutput_DeviceChange pfnCb, Pointer pCtxt);
+    int DirectOutput_RegisterDeviceCallback(Library.Pfn_DirectOutput_DeviceChange pfnCb, Pointer pCtxt);
 
     /**
      * Enumerate all devices currently attached. Calls DeviceChange callback.
@@ -107,7 +107,7 @@ public interface DirectOutputLibrary extends StdCallLibrary {
      * @param pCtxt caller supplied context pointer, passed to the callback function
      * @return S_OK : succeeded
      */
-    int DirectOutput_Enumerate(DirectOutputLibrary.Pfn_DirectOutput_EnumerateCallback pfnCb, Pointer pCtxt);
+    int DirectOutput_Enumerate(Library.Pfn_DirectOutput_EnumerateCallback pfnCb, Pointer pCtxt);
 
     /**
      * Register a callback. Called when the page changes. Callee will only receive notifications about pages they added
@@ -117,7 +117,7 @@ public interface DirectOutputLibrary extends StdCallLibrary {
      * @return S_OK: succeeded<br>
      *     E_HANDLE: hDevice is not a valid device handle
      */
-    int DirectOutput_RegisterPageCallback(Pointer hDevice, DirectOutputLibrary.Pfn_DirectOutput_PageChange pfnCb, Pointer pCtxt);
+    int DirectOutput_RegisterPageCallback(Pointer hDevice, Library.Pfn_DirectOutput_PageChange pfnCb, Pointer pCtxt);
 
     /**
      * Register a callback. Called when the soft buttons are changed and the callee's page is active
@@ -127,7 +127,7 @@ public interface DirectOutputLibrary extends StdCallLibrary {
      * @return S_OK : succeeded<br>
      *     E_HANDLE : hDevice is not a valid device handle
      */
-    int DirectOutput_RegisterSoftButtonCallback(Pointer hDevice, DirectOutputLibrary.Pfn_DirectOutput_SoftButtonChange pfnCb, Pointer pCtxt);
+    int DirectOutput_RegisterSoftButtonCallback(Pointer hDevice, Library.Pfn_DirectOutput_SoftButtonChange pfnCb, Pointer pCtxt);
 
     /**
      * Get the device type GUID. See DeviceType_* constants
