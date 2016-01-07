@@ -51,44 +51,7 @@ public class InputDemo {
         LOGGER.info("Program stops if no action is performed on the device for more than five seconds.");
         directOutput.setLed(page, UP, OFF);
         directOutput.setLed(page, DOWN, OFF);
-        device.addSoftButtonEventHandler(new SoftButtonEventHandler() {
-            @Override
-            public void buttonPressed(Button button) {
-                LOGGER.info("Button pressed: {}", button);
-                if (toggleButtons.contains(button)) {
-                    directOutput.setLed(page, button, OFF);
-                    toggleButtons.remove(button);
-                } else {
-                    directOutput.setLed(page, button, ON);
-                    toggleButtons.add(button);
-                }
-                directOutput.setLed(page, UP, ON);
-                directOutput.setLed(page, DOWN, ON);
-                waitForKey = true;
-            }
-
-            @Override
-            public void buttonReleased(Button button) {
-                LOGGER.info("Button released: {}", button);
-                directOutput.setLed(page, UP, OFF);
-                directOutput.setLed(page, DOWN, OFF);
-                waitForKey = true;
-            }
-
-            @Override
-            public void knobTurnUp(Knob knob) {
-                LOGGER.info("Knob turned up: {}", knob);
-                blink(DOWN);
-                waitForKey = true;
-            }
-
-            @Override
-            public void knobTurnDown(Knob knob) {
-                LOGGER.info("Knob turned down: {}", knob);
-                blink(UP);
-                waitForKey = true;
-            }
-        });
+        device.addSoftButtonEventHandler(new DemoSoftButtonEventHandler());
         waitForKey=true;
         while (waitForKey){
             waitForKey=false;
@@ -111,4 +74,42 @@ public class InputDemo {
         }
     }
 
+    private class DemoSoftButtonEventHandler implements SoftButtonEventHandler {
+        @Override
+        public void buttonPressed(Button button) {
+            LOGGER.info("Button pressed: {}", button);
+            if (toggleButtons.contains(button)) {
+                directOutput.setLed(page, button, OFF);
+                toggleButtons.remove(button);
+            } else {
+                directOutput.setLed(page, button, ON);
+                toggleButtons.add(button);
+            }
+            directOutput.setLed(page, UP, ON);
+            directOutput.setLed(page, DOWN, ON);
+            waitForKey = true;
+        }
+
+        @Override
+        public void buttonReleased(Button button) {
+            LOGGER.info("Button released: {}", button);
+            directOutput.setLed(page, UP, OFF);
+            directOutput.setLed(page, DOWN, OFF);
+            waitForKey = true;
+        }
+
+        @Override
+        public void knobTurnUp(Knob knob) {
+            LOGGER.info("Knob turned up: {}", knob);
+            blink(DOWN);
+            waitForKey = true;
+        }
+
+        @Override
+        public void knobTurnDown(Knob knob) {
+            LOGGER.info("Knob turned down: {}", knob);
+            blink(UP);
+            waitForKey = true;
+        }
+    }
 }

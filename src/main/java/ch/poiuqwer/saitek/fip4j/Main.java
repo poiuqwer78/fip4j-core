@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -33,6 +34,8 @@ public class Main {
 
     private static DirectOutput directOutput = null;
 
+    private static AtomicInteger numberOfDemosRunning = new AtomicInteger(0);
+
     public static void main(String[] args) {
         try {
             LOGGER.info("Starting {}.", PLUGIN_NAME);
@@ -40,33 +43,67 @@ public class Main {
                 directOutput = LibraryManager.getDirectOutput();
                 directOutput.setup(PLUGIN_NAME);
                 Collection<Device> devices = directOutput.getDevices();
-                for (Device device : devices) {
-                    device.addPageChangeEventHandler(new PageChangeEventHandler() {
-                        @Override
-                        public void pageActivated(Page page) {
-                            LOGGER.info("Page activated: {}", page);
+                directOutput.addDeviceChangeEventHandler(new DeviceChangeEventHandler() {
+                    @Override
+                    public void deviceConnected(Device device) {
+                        try {
+                            runDemos(device);
+                        } catch (InterruptedException | IOException e) {
+                            logUnexpectedError(e);
                         }
+                    }
 
-                        @Override
-                        public void pageDeactivated(Page page) {
-                            LOGGER.info("Page deactivated: {}", page);
-                        }
-                    });
-                    runDemos(device.addPage());
+                    @Override
+                    public void deviceDisconnected(Device device) {
+
+                    }
+                });
+                for (Device device : devices) {
+                    runDemos(device);
+                }
+                if (devices.isEmpty()) {
+                    int seconds = 0;
+                    LOGGER.info("Waiting 30 seconds for devices to be plugged in ...");
+                    while (directOutput.getDevices().isEmpty() && seconds++ < 30) {
+                        Thread.sleep(1000);
+                    }
+                }
+                while (numberOfDemosRunning.get() > 0) {
+                    Thread.sleep(1000);
                 }
             }
         } catch (Throwable t) {
-            LOGGER.error("Awww, unexpected error.", t);
+            logUnexpectedError(t);
         } finally {
             directOutput.cleanup();
         }
     }
 
-    private static void runDemos(Page page) throws InterruptedException, IOException {
+    private static void logUnexpectedError(Throwable t) {
+        LOGGER.error("Awww, unexpected error.", t);
+    }
+
+    private static void runDemos(Device device) throws InterruptedException, IOException {
+        numberOfDemosRunning.incrementAndGet();
+        Thread.sleep(1000);
         LOGGER.info("Running demos.");
+        device.addPageChangeEventHandler(new LoggingPageChangeEventHandler());
+        Page page = device.addPage();
         new LedDemo(page).run();
         new ScreenDemo(page).run();
         new InputDemo(page).run();
+        numberOfDemosRunning.decrementAndGet();
     }
 
+    private static class LoggingPageChangeEventHandler implements PageChangeEventHandler {
+        @Override
+        public void pageActivated(Page page) {
+            LOGGER.info("Page activated: {}", page);
+        }
+
+        @Override
+        public void pageDeactivated(Page page) {
+            LOGGER.info("Page deactivated: {}", page);
+        }
+    }
 }
