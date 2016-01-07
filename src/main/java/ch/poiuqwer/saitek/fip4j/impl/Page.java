@@ -21,6 +21,7 @@ public class Page {
     private final Device device;
 
     private boolean active = true;
+    private boolean alive = true;
 
     public Page(Device device, int index) {
         this.index = index;
@@ -35,6 +36,10 @@ public class Page {
         active = false;
     }
 
+    public void kill() {
+        alive = false;
+    }
+
     public int getIndex() {
         return index;
     }
@@ -43,5 +48,10 @@ public class Page {
         return device;
     }
 
-
+    @Override
+    public String toString() {
+        return "Page{" +
+                "index=" + index +
+                '}';
+    }
 }

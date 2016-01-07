@@ -30,9 +30,10 @@ public class LibraryManager {
      *
      * @param library the mock/test implementation of the JNA Interface
      */
+    @SuppressWarnings("unused")
     public static void setLibraryForTesting(Library library) {
         if (directOutput != null) {
-            directOutput.deinitialize();
+            directOutput.cleanup();
         }
         directOutput = new DirectOutput(library);
     }

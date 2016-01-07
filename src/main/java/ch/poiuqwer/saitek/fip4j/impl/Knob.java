@@ -17,7 +17,7 @@ package ch.poiuqwer.saitek.fip4j.impl;
  */
 public enum Knob {
 
-    LEFT(0x00000008,0x00000010),
+    LEFT(0x00000010, 0x00000008),
     RIGHT(0x00000004,0x00000002);
 
     public final int COUNTER_CLOCK_WISE;

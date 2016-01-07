@@ -15,6 +15,7 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public enum PageState {
     ACTIVE(0x00000001),
     INACTIVE(0x00000000);

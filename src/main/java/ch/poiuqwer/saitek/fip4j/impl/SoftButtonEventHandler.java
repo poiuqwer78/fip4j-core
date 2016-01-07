@@ -17,12 +17,12 @@ package ch.poiuqwer.saitek.fip4j.impl;
  */
 public interface SoftButtonEventHandler {
 
-    void buttonDown(Button button);
+    void buttonPressed(Button button);
 
-    void buttonUp(Button button);
+    void buttonReleased(Button button);
 
-    void knobCounterClockwise(Knob knob);
+    void knobTurnUp(Knob knob);
 
-    void knobClockwise(Knob knob);
+    void knobTurnDown(Knob knob);
 
 }

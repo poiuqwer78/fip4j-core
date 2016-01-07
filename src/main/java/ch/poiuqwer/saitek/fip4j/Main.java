@@ -41,19 +41,24 @@ public class Main {
                 directOutput.setup(PLUGIN_NAME);
                 Collection<Device> devices = directOutput.getDevices();
                 for (Device device : devices) {
-                    Page page = new Page(device, 0);
-                    directOutput.addPage(page, PageState.ACTIVE);
-                    try {
-                        runDemos(page);
-                    } finally {
-                        directOutput.removePage(page);
-                    }
+                    device.addPageChangeEventHandler(new PageChangeEventHandler() {
+                        @Override
+                        public void pageActivated(Page page) {
+                            LOGGER.info("Page activated: {}", page);
+                        }
+
+                        @Override
+                        public void pageDeactivated(Page page) {
+                            LOGGER.info("Page deactivated: {}", page);
+                        }
+                    });
+                    runDemos(device.addPage());
                 }
             }
         } catch (Throwable t) {
-            LOGGER.error("Unexpected error.", t);
+            LOGGER.error("Awww, unexpected error.", t);
         } finally {
-            directOutput.deinitialize();
+            directOutput.cleanup();
         }
     }
 

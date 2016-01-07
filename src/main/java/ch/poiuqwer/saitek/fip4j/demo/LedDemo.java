@@ -1,11 +1,14 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.impl.*;
+import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
+import ch.poiuqwer.saitek.fip4j.impl.LibraryManager;
+import ch.poiuqwer.saitek.fip4j.impl.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static ch.poiuqwer.saitek.fip4j.impl.Button.*;
-import static ch.poiuqwer.saitek.fip4j.impl.LedState.*;
+import static ch.poiuqwer.saitek.fip4j.impl.LedState.OFF;
+import static ch.poiuqwer.saitek.fip4j.impl.LedState.ON;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -27,12 +30,10 @@ public class LedDemo {
     private static Logger LOGGER = LoggerFactory.getLogger(LedDemo.class);
 
     DirectOutput directOutput;
-    Device device;
     Page page;
 
     public LedDemo(Page page) {
         this.directOutput = LibraryManager.getDirectOutput();
-        this.device = page.getDevice();
         this.page = page;
     }
 

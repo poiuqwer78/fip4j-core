@@ -83,10 +83,12 @@ public class DirectOutput {
         }
     }
 
+    @SuppressWarnings("unused")
     public void addDeviceChangeEventHandler(DeviceChangeEventHandler handler) {
         deviceChangeEventHandlers.add(handler);
     }
 
+    @SuppressWarnings("unused")
     public void removeDeviceChangeEventHandler(DeviceChangeEventHandler handler) {
         deviceChangeEventHandlers.remove(handler);
     }
@@ -110,7 +112,7 @@ public class DirectOutput {
     private HRESULT result;
 
     @SuppressWarnings("unused")
-    public HRESULT getResult() {
+    HRESULT getResult() {
         return result;
     }
 
@@ -128,7 +130,7 @@ public class DirectOutput {
         call(dll.DirectOutput_Initialize(new WString(pluginName)));
     }
 
-    public void deinitialize() {
+    public void cleanup() {
         call(dll.DirectOutput_Deinitialize());
     }
 
@@ -141,6 +143,7 @@ public class DirectOutput {
         call(dll.DirectOutput_Enumerate((hDevice, pCtxt) -> devicePointers.add(hDevice), null));
         if (devicePointers.size() > 0) {
             LOGGER.debug("Found {} device(s). Will check if they are Saitek Pro Flight Instrument Panels.", devicePointers.size());
+            //noinspection Convert2streamapi
             for (Pointer devicePointer : devicePointers) {
                 if (isFlightInstrumentPanel(devicePointer)) {
                     Device device = setupDevice(devicePointer);
@@ -209,7 +212,7 @@ public class DirectOutput {
         return false;
     }
 
-    public void addPage(Page page, PageState state) {
+    void addPage(Page page, PageState state) {
         call(dll.DirectOutput_AddPage(
                 page.getDevice().getPointer(),
                 page.getIndex(),
@@ -217,7 +220,7 @@ public class DirectOutput {
                 state.getValue()));
     }
 
-    public void removePage(Page page) {
+    void removePage(Page page) {
         call(dll.DirectOutput_RemovePage(
                 page.getDevice().getPointer(),
                 page.getIndex()));

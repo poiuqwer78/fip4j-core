@@ -17,6 +17,7 @@ import com.google.common.base.Preconditions;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public enum Button {
 
     S1(0x00000020, 1),
