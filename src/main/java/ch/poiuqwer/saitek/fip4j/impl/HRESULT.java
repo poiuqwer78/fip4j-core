@@ -18,7 +18,7 @@ import java.util.Map;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public enum HRESULT {
+enum HRESULT {
     // Common HRESULT values
     S_OK("Operation successful"),
     E_ABORT("Operation aborted"),

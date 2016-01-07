@@ -217,7 +217,7 @@ public class DirectOutput {
                 page.getDevice().getPointer(),
                 page.getIndex(),
                 new WString(Integer.toString(page.getIndex())),
-                state.getValue()));
+                state.value));
     }
 
     void removePage(Page page) {
@@ -230,8 +230,8 @@ public class DirectOutput {
         call(dll.DirectOutput_SetLed(
                 page.getDevice().getPointer(),
                 page.getIndex(),
-                button.LED,
-                state.VALUE));
+                button.led,
+                state.value));
     }
 
     public void setImage(Page page, BufferedImage image) {

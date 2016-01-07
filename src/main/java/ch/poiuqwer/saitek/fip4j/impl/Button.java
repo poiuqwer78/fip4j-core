@@ -30,11 +30,11 @@ public enum Button {
     DOWN(0x00000000, 8);
 
     public final int VALUE;
-    public final int LED;
+    public final int led;
 
     Button(int value, int led){
         this.VALUE = value;
-        this.LED = led;
+        this.led = led;
     }
 
     public static Button S(int i){

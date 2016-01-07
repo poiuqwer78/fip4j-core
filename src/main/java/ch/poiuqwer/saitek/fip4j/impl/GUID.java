@@ -24,7 +24,7 @@ import static com.google.common.base.Preconditions.*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class GUID {
+class GUID {
     private static final String GUID_PATTERN = "\\{[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12}\\}";
     private static final Predicate<String> syntax = Pattern.compile(GUID_PATTERN).asPredicate();
 

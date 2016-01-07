@@ -177,11 +177,11 @@ public class Device {
     }
 
     private boolean turnedCounterClockwise(Knob knob, int dwButtons) {
-        return (knob.COUNTER_CLOCK_WISE & dwButtons) != 0;
+        return (knob.counterClockwise & dwButtons) != 0;
     }
 
     private boolean turnedClockwise(Knob knob, int dwButtons) {
-        return (knob.CLOCK_WISE & dwButtons) != 0;
+        return (knob.clockwise & dwButtons) != 0;
     }
 
 

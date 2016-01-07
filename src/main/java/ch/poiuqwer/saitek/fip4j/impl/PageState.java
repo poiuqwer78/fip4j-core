@@ -20,13 +20,10 @@ public enum PageState {
     ACTIVE(0x00000001),
     INACTIVE(0x00000000);
 
-    private final int value;
+    public final int value;
 
     PageState(int value){
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
-    }
 }
