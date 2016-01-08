@@ -91,8 +91,8 @@ public class Main {
     }
 
     private static void runDemos(Page page) throws InterruptedException, IOException {
-//        new LedDemo(page).run();
-//        new ScreenDemo(page).run();
+        new LedDemo(page).run();
+        new ScreenDemo(page).run();
         new InputDemo(page).run();
     }
 
