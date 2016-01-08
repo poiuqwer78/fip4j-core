@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +60,7 @@ enum HRESULT {
         put(0xFF04006F,E_BUFFERTOOSMALL);
     }};
 
-    public static HRESULT of(int code){
+    static HRESULT of(int code) {
         HRESULT result = lookup.get(code);
         return result != null ? result : W_UNKNOWN;
     }

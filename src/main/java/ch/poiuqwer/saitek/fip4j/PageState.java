@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -15,12 +15,14 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public enum LedState {
-    ON(1), OFF(0);
+@SuppressWarnings("unused")
+public enum PageState {
+    ACTIVE(0x00000001),
+    INACTIVE(0x00000000);
 
     public final int value;
 
-    LedState(int value) {
+    PageState(int value){
         this.value = value;
     }
 

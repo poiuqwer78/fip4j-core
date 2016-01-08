@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -33,7 +33,7 @@ class GUID {
     /** Create a GUID from its string representation.
      * @param formatted in the form of e.g. {29DAD506-F93B-4F20-85FA-1E02C04FAC17}
      */
-    public static GUID fromString(String formatted){
+    static GUID fromString(String formatted) {
         checkArgument(syntax.test(formatted));
         formatted=formatted.substring(1,37).toLowerCase();
         return new GUID(UUID.fromString(formatted));
@@ -43,7 +43,7 @@ class GUID {
      * Create a GUID from a byte array
      * @param bytes byte array of length 16 representing the GUID
      */
-    public static GUID fromBinary(byte[] bytes){
+    static GUID fromBinary(byte[] bytes) {
         checkArgument(bytes.length == 16);
         ByteBuffer source = ByteBuffer.wrap(bytes);
         ByteBuffer target = ByteBuffer.allocate(16).
@@ -69,7 +69,7 @@ class GUID {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GUID GUID = (ch.poiuqwer.saitek.fip4j.impl.GUID) o;
+        GUID GUID = (ch.poiuqwer.saitek.fip4j.GUID) o;
         return Objects.equals(uuid, GUID.uuid);
     }
 

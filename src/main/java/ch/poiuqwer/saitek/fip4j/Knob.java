@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -20,12 +20,12 @@ public enum Knob {
     LEFT(0x00000010, 0x00000008),
     RIGHT(0x00000004,0x00000002);
 
-    public final int counterClockwise;
-    public final int clockwise;
+    public final int ccwValue;
+    public final int cwValue;
 
     Knob(int ccw, int cw) {
-        this.counterClockwise = ccw;
-        this.clockwise = cw;
+        this.ccwValue = ccw;
+        this.cwValue = cw;
     }
 
 }

@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -15,10 +15,13 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public interface DeviceChangeEventHandler {
+public enum LedState {
+    ON(1), OFF(0);
 
-    void deviceConnected(Device device);
+    public final int value;
 
-    void deviceDisconnected(Device device);
+    LedState(int value) {
+        this.value = value;
+    }
 
 }

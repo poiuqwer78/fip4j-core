@@ -1,6 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
-
-import com.google.common.base.Preconditions;
+package ch.poiuqwer.saitek.fip4j;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -17,29 +15,10 @@ import com.google.common.base.Preconditions;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@SuppressWarnings("unused")
-public enum Button {
+public interface DeviceChangeListener {
 
-    S1(0x00000020, 1),
-    S2(0x00000040, 2),
-    S3(0x00000080, 3),
-    S4(0x00000100, 4),
-    S5(0x00000200, 5),
-    S6(0x00000400, 6),
-    UP(0x00000000, 7),
-    DOWN(0x00000000, 8);
+    void deviceConnected(Device device);
 
-    public final int VALUE;
-    public final int led;
-
-    Button(int value, int led){
-        this.VALUE = value;
-        this.led = led;
-    }
-
-    public static Button S(int i){
-        Preconditions.checkArgument(i>=0 && i <=6);
-        return Button.valueOf("S"+i);
-    }
+    void deviceDisconnected(Device device);
 
 }

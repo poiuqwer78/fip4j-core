@@ -1,14 +1,14 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.impl.DirectOutput;
-import ch.poiuqwer.saitek.fip4j.impl.LibraryManager;
-import ch.poiuqwer.saitek.fip4j.impl.Page;
+import ch.poiuqwer.saitek.fip4j.DirectOutput;
+import ch.poiuqwer.saitek.fip4j.LibraryManager;
+import ch.poiuqwer.saitek.fip4j.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static ch.poiuqwer.saitek.fip4j.impl.Button.*;
-import static ch.poiuqwer.saitek.fip4j.impl.LedState.OFF;
-import static ch.poiuqwer.saitek.fip4j.impl.LedState.ON;
+import static ch.poiuqwer.saitek.fip4j.Button.*;
+import static ch.poiuqwer.saitek.fip4j.LedState.OFF;
+import static ch.poiuqwer.saitek.fip4j.LedState.ON;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -29,42 +29,40 @@ public class LedDemo {
 
     private static Logger LOGGER = LoggerFactory.getLogger(LedDemo.class);
 
-    DirectOutput directOutput;
     Page page;
 
     public LedDemo(Page page) {
-        this.directOutput = LibraryManager.getDirectOutput();
         this.page = page;
     }
 
     public void run() throws InterruptedException {
         LOGGER.info("Running LED demo.");
-        for (int i = 0; i < 2; i++) {
-            directOutput.setLed(page, UP, ON);
-            directOutput.setLed(page, DOWN, OFF);
+        for (int i = 0; i < 1; i++) {
+            page.setLed(UP, ON);
+            page.setLed(DOWN, OFF);
             Thread.sleep(200);
-            directOutput.setLed(page, DOWN, ON);
-            directOutput.setLed(page, UP, OFF);
+            page.setLed(DOWN, ON);
+            page.setLed(UP, OFF);
             Thread.sleep(200);
         }
-        directOutput.setLed(page, UP, OFF);
-        directOutput.setLed(page, DOWN, OFF);
+        page.setLed(UP, OFF);
+        page.setLed(DOWN, OFF);
         for (int j = 0; j < 1; j++) {
             Thread.sleep(200);
             for (int i = 2; i <= 6; i++) {
-                directOutput.setLed(page, S(i), ON);
-                directOutput.setLed(page, S(i - 1), OFF);
+                page.setLed(S(i), ON);
+                page.setLed(S(i - 1), OFF);
                 Thread.sleep(50);
             }
             Thread.sleep(200);
             for (int i = 5; i >= 1; i--) {
-                directOutput.setLed(page, S(i), ON);
-                directOutput.setLed(page, S(i + 1), OFF);
+                page.setLed(S(i), ON);
+                page.setLed(S(i + 1), OFF);
                 Thread.sleep(50);
             }
         }
         Thread.sleep(200);
-        directOutput.setLed(page, S1, OFF);
+        page.setLed(S1, OFF);
     }
 
 }

@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
@@ -28,29 +28,6 @@ import com.sun.jna.win32.StdCallLibrary;
 public interface Library extends StdCallLibrary {
 
     String JNA_LIBRARY_NAME = "DirectOutput";
-
-    /**
-     * Left and right scroll buttons
-     */
-    int RIGHT_SCROLL_UP = 0x00000002;
-    int RIGHT_SCROLL_DOWN = 0x00000004;
-    int LEFT_SCROLL_DOWN = 0x00000008;
-    int LEFT_SCROLL_UP = 0x00000010;
-
-    /**
-     * Six buttons on the left
-     */
-    int BUTTON_1 = 0x00000020;
-    int BUTTON_2 = 0x00000040;
-    int BUTTON_3 = 0x00000080;
-    int BUTTON_4 = 0x00000100;
-    int BUTTON_5 = 0x00000200;
-    int BUTTON_6 = 0x00000400;
-
-    /**
-     * Flag to mark added page as active.
-     */
-    int FLAG_SET_AS_ACTIVE = 0x00000001;
 
     /**
      * Callback for DirectOutput_Enumerate
@@ -209,20 +186,5 @@ public interface Library extends StdCallLibrary {
      *     E_BUFFERTOOSMALL : cbValue is not of the correct size
      */
     int DirectOutput_SetImage(Pointer hDevice, int dwPage, int dwIndex, int cbValue, Pointer pvValue);
-
-    /**
-     * Set the image on the device from a file.
-     * @param hDevice opaque device handle
-     * @param dwPage page to display the image on
-     * @param dwIndex index of the image
-     * @param cchFilename the count of characters in wszFilename
-     * @param wszFilename the full path to the image file to display. Must be a BMP or JPG file
-     * @return S_OK : succeeded<br>
-     *     E_HANDLE : hDevice is not a valid device handle<br>
-     *     E_NOTIMPL : hDevice does not have any images<br>
-     *     E_INVALIDARG : dwPage or dwIndex is not a valid id<br>
-     *     E_PAGENOTACTIVE : dwPage is not the active page
-     */
-    int DirectOutput_SetImageFromFile(Pointer hDevice, int dwPage, int dwIndex, int cchFilename, WString wszFilename);
 
 }

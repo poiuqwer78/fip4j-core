@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -15,15 +15,10 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@SuppressWarnings("unused")
-public enum PageState {
-    ACTIVE(0x00000001),
-    INACTIVE(0x00000000);
+public interface PageChangeListener {
 
-    public final int value;
+    void pageActivated(Page page);
 
-    PageState(int value){
-        this.value = value;
-    }
+    void pageDeactivated(Page page);
 
 }

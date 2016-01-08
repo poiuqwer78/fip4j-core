@@ -1,6 +1,5 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
-import com.google.common.base.Preconditions;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
@@ -8,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.util.*;
 
 /**
@@ -31,28 +29,31 @@ public class DirectOutput {
 
     private static final GUID FIP = GUID.fromString("{3E083CD8-6A37-4A58-80A8-3D6A2C07513E}");
     private static final GUID X52 = GUID.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
-    private static final int DISPLAY_WIDTH = 320;
-    private static final int DISPLAY_HEIGHT = 240;
-    private static final int DISPLAY_COLOR_DEPTH = 3;
 
     private final Library dll;
-
     private final Map<Pointer, Device> devices = new HashMap<>();
+    private final Set<DeviceChangeListener> deviceChangeListeners = new HashSet<>();
 
-    private final Set<DeviceChangeEventHandler> deviceChangeEventHandlers = new HashSet<>();
+    private HRESULT result;
+
 
     public DirectOutput(Library dll) {
         this.dll = dll;
+    }
+
+    @SuppressWarnings("unused")
+    HRESULT getResult() {
+        return result;
     }
 
     private final Library.Pfn_DirectOutput_DeviceChange deviceChangeCallback =
             (hDevice, bAdded, pCtxt) -> handleDeviceChange(hDevice, bAdded);
 
     private final Library.Pfn_DirectOutput_SoftButtonChange softButtonCallback =
-            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> fireSoftButtonEvents(hDevice, dwButtons);
+            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> handleSoftButtonEvent(hDevice, dwButtons);
 
     private final Library.Pfn_DirectOutput_PageChange pageChangeCallback =
-            (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> firePageChangeEvents(hDevice, dwPage, bSetActive);
+            (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> handlePageChangeEvent(hDevice, dwPage, bSetActive);
 
     private void handleDeviceChange(Pointer hDevice, byte bAdded) {
         if (bAdded == 1) {
@@ -67,9 +68,13 @@ public class DirectOutput {
             LOGGER.info("Device disconnected: {}", devices.get(hDevice).toString());
             Device device = devices.remove(hDevice);
             device.disconnect();
-            for (DeviceChangeEventHandler handler : deviceChangeEventHandlers) {
-                handler.deviceDisconnected(device);
-            }
+            fireDeviceDisconnectedEvents(device);
+        }
+    }
+
+    private void fireDeviceDisconnectedEvents(Device device) {
+        for (DeviceChangeListener handler : deviceChangeListeners) {
+            handler.deviceDisconnected(device);
         }
     }
 
@@ -77,43 +82,40 @@ public class DirectOutput {
         if (isFlightInstrumentPanel(hDevice)) {
             Device device = setupDevice(hDevice);
             devices.put(hDevice, device);
-            for (DeviceChangeEventHandler handler : deviceChangeEventHandlers) {
-                handler.deviceConnected(device);
-            }
+            fireDeviceConnectedEvents(device);
+        }
+    }
+
+    private void fireDeviceConnectedEvents(Device device) {
+        for (DeviceChangeListener handler : deviceChangeListeners) {
+            handler.deviceConnected(device);
         }
     }
 
     @SuppressWarnings("unused")
-    public void addDeviceChangeEventHandler(DeviceChangeEventHandler handler) {
-        deviceChangeEventHandlers.add(handler);
+    public void addDeviceChangeListener(DeviceChangeListener listener) {
+        deviceChangeListeners.add(listener);
     }
 
     @SuppressWarnings("unused")
-    public void removeDeviceChangeEventHandler(DeviceChangeEventHandler handler) {
-        deviceChangeEventHandlers.remove(handler);
+    public void removeDeviceChangeListener(DeviceChangeListener listener) {
+        deviceChangeListeners.remove(listener);
     }
 
-    private void fireSoftButtonEvents(Pointer hDevice, int dwButtons) {
+    private void handleSoftButtonEvent(Pointer hDevice, int dwButtons) {
         LOGGER.debug("Soft Button State: {}", dwButtons);
         Device device = devices.get(hDevice);
         if (device != null) {
-            device.fireSoftButtonEventHandlers(dwButtons);
+            device.handleSoftButtonChange(dwButtons);
         }
     }
 
-    private void firePageChangeEvents(Pointer hDevice, int dwPage, byte bSetActive) {
+    private void handlePageChangeEvent(Pointer hDevice, int dwPage, byte bSetActive) {
         LOGGER.debug("Page Change - Page: {} Active: {}", dwPage, bSetActive);
         Device device = devices.get(hDevice);
         if (device != null) {
-            device.firePageChangeEventHandlers(dwPage, bSetActive);
+            device.handlePageChange(dwPage, bSetActive);
         }
-    }
-
-    private HRESULT result;
-
-    @SuppressWarnings("unused")
-    HRESULT getResult() {
-        return result;
     }
 
     public void setup(String pluginName) {
@@ -226,7 +228,7 @@ public class DirectOutput {
                 page.getIndex()));
     }
 
-    public void setLed(Page page, Button button, LedState state) {
+    void setLed(Page page, Button button, LedState state) {
         call(dll.DirectOutput_SetLed(
                 page.getDevice().getPointer(),
                 page.getIndex(),
@@ -234,45 +236,26 @@ public class DirectOutput {
                 state.value));
     }
 
-    public void setImage(Page page, BufferedImage image) {
-        Preconditions.checkArgument(image.getType() == BufferedImage.TYPE_3BYTE_BGR, "image needs to be of type 3BYTE_BGR.");
-        Preconditions.checkArgument(image.getWidth() == DISPLAY_WIDTH, "image width needs to be %s", DISPLAY_WIDTH);
-        Preconditions.checkArgument(image.getHeight() == DISPLAY_HEIGHT, "image height needs to be %s", DISPLAY_HEIGHT);
-        byte[] bytes = bufferedImageToBytes(image);
-        Memory memory = bytesToMemory(bytes);
+    void setImage(Page page, BufferedImage image) {
+        DisplayBuffer buffer = page.getDisplayBuffer();
+        buffer.loadImage(image);
         call(dll.DirectOutput_SetImage(
                 page.getDevice().getPointer(),
                 page.getIndex(),
                 0,
-                bytes.length,
-                memory));
+                buffer.getSize(),
+                buffer.getMemory()));
     }
 
-    public void clearScreen(Page page) {
-        int size = DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_COLOR_DEPTH;
-        Memory memory = new Memory(size);
-        memory.clear();
+    void clearScreen(Page page) {
+        DisplayBuffer buffer = page.getDisplayBuffer();
+        buffer.clear();
         call(dll.DirectOutput_SetImage(
                 page.getDevice().getPointer(),
                 page.getIndex(),
                 0,
-                size,
-                memory));
-    }
-
-    private byte[] bufferedImageToBytes(BufferedImage image) {
-        return ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-    }
-
-    private Memory bytesToMemory(byte[] bytes) {
-        int size = bytes.length;
-        Memory image = new Memory(size);
-        int lineLength = DISPLAY_WIDTH * DISPLAY_COLOR_DEPTH;
-        int pointerOffset = size - lineLength;
-        for (int i = 0; i < DISPLAY_HEIGHT; i++) {
-            image.write(pointerOffset - (i * lineLength), bytes, i * lineLength, lineLength);
-        }
-        return image;
+                buffer.getSize(),
+                buffer.getMemory()));
     }
 
     private void call(int code) {

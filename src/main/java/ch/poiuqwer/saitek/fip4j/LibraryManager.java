@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
@@ -39,9 +39,9 @@ public class LibraryManager {
     }
 
     /**
-     * Get direct output library. The first time, the library is loaded which is expensive. The subsequent calls to this
-     * method use the previously loaded library.
-     * If the directOutput library has been initialized using useLibrary(), this call returns the previously set library.
+     * Get direct output library.
+     *
+     * If the directOutput library has been initialized using setLibraryForTesting(), this call returns the previously set library.
      *
      * @return the library to interact with Saitek FIPs
      */
@@ -49,7 +49,7 @@ public class LibraryManager {
         return directOutput;
     }
 
-    public static boolean loadDirectOutput() {
+    public static boolean loadLibrary() {
         LOGGER.debug("Loading DirectOutput library.");
         System.setProperty("jna.library.path", WindowsRegistry.getLibraryPath());
         try {

@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
@@ -30,11 +30,20 @@ public class Device {
     private final String serialNumber;
     private final Pointer pointer;
 
-    private final List<Page> pages = new ArrayList<>();
+    private boolean connected = true;
 
+    private final List<Page> pages = new ArrayList<>();
     private Page activePage;
 
     private Set<Button> downButtons = new HashSet<>();
+
+    private final Set<PageChangeListener> pageChangeListeners = new HashSet<>();
+    private final Set<SoftButtonListener> softButtonListeners = new HashSet<>();
+
+    public Device(Pointer pointer, String serialNumber) {
+        this.pointer = pointer;
+        this.serialNumber = serialNumber;
+    }
 
     public Page addPage() {
         Preconditions.checkState(connected);
@@ -58,40 +67,30 @@ public class Device {
         page.kill();
     }
 
-    private boolean connected = true;
-
     @SuppressWarnings("unused")
     public boolean isConnected() {
         return connected;
     }
 
-    private final Set<PageChangeEventHandler> pageChangeEventHandlers = new HashSet<>();
-    private final Set<SoftButtonEventHandler> softButtonEventHandlers = new HashSet<>();
-
-    public Device(Pointer pointer, String serialNumber) {
-        this.pointer = pointer;
-        this.serialNumber = serialNumber;
-    }
-
-    public void addPageChangeEventHandler(PageChangeEventHandler handler) {
-        pageChangeEventHandlers.add(handler);
+    public void addPageChangeListener(PageChangeListener listener) {
+        pageChangeListeners.add(listener);
     }
 
     @SuppressWarnings("unused")
-    public void removePageChangeEventHandler(PageChangeEventHandler handler) {
-        pageChangeEventHandlers.remove(handler);
+    public void removePageChangeListener(PageChangeListener listener) {
+        pageChangeListeners.remove(listener);
     }
 
-    public void addSoftButtonEventHandler(SoftButtonEventHandler handler) {
-        softButtonEventHandlers.add(handler);
+    public void addSoftButtonListener(SoftButtonListener listener) {
+        softButtonListeners.add(listener);
     }
 
     @SuppressWarnings("unused")
-    public void removeSoftButtonEventHandler(SoftButtonEventHandler handler) {
-        softButtonEventHandlers.remove(handler);
+    public void removeSoftButtonListener(SoftButtonListener listener) {
+        softButtonListeners.remove(listener);
     }
 
-    void firePageChangeEventHandlers(int dwPage, byte bSetActive) {
+    void handlePageChange(int dwPage, byte bSetActive) {
         Preconditions.checkState(connected);
         if (activePage != null && activePage.getIndex() == dwPage) {
             if (bSetActive == 0) {
@@ -104,16 +103,20 @@ public class Device {
                 activePage.activate();
             }
         }
-        for (PageChangeEventHandler handler : pageChangeEventHandlers) {
+        firePageChangeEvents(dwPage, bSetActive);
+    }
+
+    private void firePageChangeEvents(int dwPage, byte bSetActive) {
+        for (PageChangeListener listener : pageChangeListeners) {
             if (bSetActive == 1) {
                 try {
-                    handler.pageActivated(pages.get(dwPage));
+                    listener.pageActivated(pages.get(dwPage));
                 } catch (Throwable t) {
                     LOGGER.error("Error in EventHandler.", t);
                 }
             } else {
                 try {
-                    handler.pageDeactivated(pages.get(dwPage));
+                    listener.pageDeactivated(pages.get(dwPage));
                 } catch (Throwable t) {
                     LOGGER.error("Error in EventHandler.", t);
                 }
@@ -121,7 +124,7 @@ public class Device {
         }
     }
 
-    void fireSoftButtonEventHandlers(int dwButtons) {
+    void handleSoftButtonChange(int dwButtons) {
         Set<Button> newDownButtons = new HashSet<>();
         Set<Button> pressedButtons = new HashSet<>();
         Set<Button> releasedButtons = new HashSet<>();
@@ -138,56 +141,73 @@ public class Device {
                 }
             }
         }
-        for (SoftButtonEventHandler handler : softButtonEventHandlers) {
-            for (Button pressed : pressedButtons) {
-                try {
-                    handler.buttonPressed(pressed);
-                } catch (Throwable t) {
-                    LOGGER.error("Error in EventHandler.", t);
-                }
-            }
-            for (Button released : releasedButtons) {
-                try {
-                    handler.buttonReleased(released);
-                } catch (Throwable t) {
-                    LOGGER.error("Error in EventHandler.", t);
-                }
-            }
-            for (Knob knob : Knob.values()) {
-                if (turnedClockwise(knob, dwButtons)) {
-                    try {
-                        handler.knobTurnUp(knob);
-                    } catch (Throwable t) {
-                        LOGGER.error("Error in EventHandler.", t);
-                    }
-                } else if (turnedCounterClockwise(knob, dwButtons)) {
-                    try {
-                        handler.knobTurnDown(knob);
-                    } catch (Throwable t) {
-                        LOGGER.error("Error in EventHandler.", t);
-                    }
-                }
-            }
-        }
+        fireSoftButtonEvents(dwButtons, pressedButtons, releasedButtons);
         downButtons = newDownButtons;
     }
 
-    private boolean pressed(Button s, int dwButtons) {
-        return (s.VALUE & dwButtons) != 0;
+    private void fireSoftButtonEvents(int dwButtons, Set<Button> pressedButtons, Set<Button> releasedButtons) {
+        for (SoftButtonListener handler : softButtonListeners) {
+            firePressedSoftButtonEvents(pressedButtons, handler);
+            fireReleasedSoftButtonEvents(releasedButtons, handler);
+            fireKnobEvents(dwButtons, handler);
+        }
     }
 
-    private boolean turnedCounterClockwise(Knob knob, int dwButtons) {
-        return (knob.counterClockwise & dwButtons) != 0;
+    private void firePressedSoftButtonEvents(Set<Button> pressedButtons, SoftButtonListener handler) {
+        for (Button pressed : pressedButtons) {
+            try {
+                handler.buttonPressed(pressed);
+            } catch (Throwable t) {
+                LOGGER.error("Error in EventHandler.", t);
+            }
+        }
+    }
+
+    private void fireReleasedSoftButtonEvents(Set<Button> releasedButtons, SoftButtonListener handler) {
+        for (Button released : releasedButtons) {
+            try {
+                handler.buttonReleased(released);
+            } catch (Throwable t) {
+                LOGGER.error("Error in EventHandler.", t);
+            }
+        }
+    }
+
+    private void fireKnobEvents(int dwButtons, SoftButtonListener handler) {
+        for (Knob knob : Knob.values()) {
+            if (turnedClockwise(knob, dwButtons)) {
+                try {
+                    handler.knobTurnedClockwise(knob);
+                } catch (Throwable t) {
+                    LOGGER.error("Error in EventHandler.", t);
+                }
+            } else if (turnedCounterclockwise(knob, dwButtons)) {
+                try {
+                    handler.knobTurnedCounterclockwise(knob);
+                } catch (Throwable t) {
+                    LOGGER.error("Error in EventHandler.", t);
+                }
+            }
+        }
+    }
+
+    private boolean pressed(Button s, int dwButtons) {
+        return (s.value & dwButtons) != 0;
+    }
+
+    private boolean turnedCounterclockwise(Knob knob, int dwButtons) {
+        return (knob.ccwValue & dwButtons) != 0;
     }
 
     private boolean turnedClockwise(Knob knob, int dwButtons) {
-        return (knob.clockwise & dwButtons) != 0;
+        return (knob.cwValue & dwButtons) != 0;
     }
-
 
     void disconnect() {
         this.connected = false;
-
+        for (Page page : pages) {
+            page.deactivate();
+        }
     }
 
     @SuppressWarnings("unused")

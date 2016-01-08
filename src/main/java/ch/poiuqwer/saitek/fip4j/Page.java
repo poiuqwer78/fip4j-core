@@ -1,4 +1,8 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
+
+import com.google.common.base.Preconditions;
+
+import java.awt.image.BufferedImage;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -19,6 +23,8 @@ public class Page {
 
     private final int index;
     private final Device device;
+    private final DisplayBuffer displayBuffer;
+    private final DirectOutput directOutput;
 
     private boolean active = true;
     private boolean alive = true;
@@ -26,13 +32,17 @@ public class Page {
     public Page(Device device, int index) {
         this.index = index;
         this.device = device;
+        this.displayBuffer = new DisplayBuffer();
+        this.directOutput = LibraryManager.getDirectOutput();
     }
 
     public void activate() {
+        Preconditions.checkState(alive);
         active = true;
     }
 
     public void deactivate() {
+        Preconditions.checkState(alive);
         active = false;
     }
 
@@ -48,10 +58,38 @@ public class Page {
         return device;
     }
 
+    DisplayBuffer getDisplayBuffer() {
+        return displayBuffer;
+    }
+
+    public void setLed(Button button, LedState state) {
+        Preconditions.checkState(active && alive);
+        directOutput.setLed(this, button, state);
+    }
+
+    public void setImage(BufferedImage image) {
+        Preconditions.checkState(active && alive);
+        directOutput.setImage(this, image);
+    }
+
+    public void clearScreen() {
+        Preconditions.checkState(active && alive);
+        directOutput.clearScreen(this);
+    }
+
+    public void addSoftButtonEventHandler(SoftButtonListener handler) {
+        device.addSoftButtonListener(handler);
+    }
+
+    public void removeSoftButtonEventHandler(SoftButtonListener handler) {
+        device.removeSoftButtonListener(handler);
+    }
+
     @Override
     public String toString() {
         return "Page{" +
                 "index=" + index +
                 '}';
     }
+
 }

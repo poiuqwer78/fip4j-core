@@ -1,14 +1,18 @@
 package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.impl.*;
+import ch.poiuqwer.saitek.fip4j.DisplayBuffer;
+import ch.poiuqwer.saitek.fip4j.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+
+import static ch.poiuqwer.saitek.fip4j.Button.*;
+import static ch.poiuqwer.saitek.fip4j.LedState.*;
+import static java.awt.Color.*;
+import static java.awt.Font.*;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -27,47 +31,116 @@ import java.io.IOException;
  */
 public class ScreenDemo {
 
-    private static final String IMG_PATH = "C:/Program Files/Saitek/DirectOutput/Werbung";
-
     private static Logger LOGGER = LoggerFactory.getLogger(ScreenDemo.class);
 
-    DirectOutput directOutput;
     Page page;
 
     public ScreenDemo(Page page) {
-        this.directOutput = LibraryManager.getDirectOutput();
         this.page = page;
     }
 
-    public void run() throws InterruptedException, IOException {
+    public void run() throws InterruptedException {
         LOGGER.info("Running screen demo.");
-        if (!new File(IMG_PATH).exists()){
-            LOGGER.error("This demo requires to set the path to the five advertisements (Fip1.jpg .. Fip2.jpg) in ScreenDemo:IMG_PATH");
-            return;
-        }
-        BufferedImage[] img = loadImages();
-        BufferedImage bufferedImage = getBufferedImage();
+
+        BufferedImage bufferedImage = DisplayBuffer.getSuitableBufferedImage();
         Graphics g = bufferedImage.getGraphics();
-        for (int i = 0; i < 1; i++) {
-            for (BufferedImage anImg : img) {
-                g.drawImage(anImg, 0, 0, null);
-                directOutput.setImage(page, bufferedImage);
-                Thread.sleep(500);
+        Font font = new Font(MONOSPACED, BOLD, 14);
+        g.setFont(font);
+
+        g.setColor(DARK_GRAY);
+        drawLayout(g);
+
+        g.setColor(GREEN);
+        drawButtons(g);
+
+        drawColors(g);
+
+        g.setColor(GRAY);
+        drawText(g);
+
+        measurePerformance(bufferedImage, g);
+
+        Thread.sleep(5000);
+
+        page.clearScreen();
+    }
+
+    private void measurePerformance(BufferedImage bufferedImage, Graphics g) {
+        g.drawString("Testing performance ...", 50, 180);
+
+        page.setImage(bufferedImage);
+
+        g.drawRect(48, 188, 269, 19);
+        long start = System.nanoTime();
+        int frames = 0;
+        for (int i = 0; i < 265; i++) {
+            g.drawLine(50 + i, 190, 50 + i, 205);
+            if (i % 2 == 0) {
+                page.setImage(bufferedImage);
+                frames++;
             }
         }
-        directOutput.clearScreen(page);
+        float duration = (System.nanoTime() - start) / 1000000000;
+        long framerate = (long) (frames / duration);
+        g.drawString("Framerate: " + framerate + " /s", 50, 225);
+        page.setImage(bufferedImage);
     }
 
-    private BufferedImage getBufferedImage() {
-        return new BufferedImage(320, 240, BufferedImage.TYPE_3BYTE_BGR);
+    private void switchOnTheLights() {
+        page.setLed(S1, ON);
+        page.setLed(S2, ON);
+        page.setLed(S3, ON);
+        page.setLed(S4, ON);
+        page.setLed(S5, ON);
+        page.setLed(S6, ON);
     }
 
-    private BufferedImage[] loadImages() throws IOException {
-        BufferedImage[] img = new BufferedImage[5];
-        for (int i = 0; i < img.length; i++) {
-            img[i] = ImageIO.read(new File(IMG_PATH +"/Fip" + (i + 1) + ".jpg"));
+    private void drawColors(Graphics g) {
+        for (int i = 0; i < 256; i++) {
+            g.setColor(new Color(i, 0, 0));
+            g.drawLine(60 + i, 75, 60 + i, 95);
         }
-        return img;
+        for (int i = 0; i < 256; i++) {
+            g.setColor(new Color(0, i, 0));
+            g.drawLine(60 + i, 105, 60 + i, 125);
+        }
+        for (int i = 0; i < 256; i++) {
+            g.setColor(new Color(0, 0, i));
+            g.drawLine(60 + i, 135, 60 + i, 155);
+        }
+    }
+
+    private void drawText(Graphics g) {
+        g.drawString("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 50, 17);
+        g.drawString("abcdefghijklmnopqrstuvwxyz", 50, 32);
+        g.drawString("1234567890", 50, 47);
+        g.drawString("!@#$%^&*()_+{}:<>?,./;'[]-=`", 50, 62);
+    }
+
+    private void drawLayout(Graphics g) {
+        g.drawLine(0, 33, 45, 33);
+        g.drawLine(0, 77, 45, 77);
+        g.drawLine(0, 120, 45, 120);
+        g.drawLine(0, 164, 45, 164);
+        g.drawLine(0, 207, 45, 207);
+        g.drawLine(45, 0, 45, 239);
+        g.drawLine(45, 70, 319, 70);
+        g.drawLine(45, 160, 319, 160);
+    }
+
+    private void drawButtons(Graphics g) {
+        g.drawRoundRect(0, 3, 30, 15, 2, 2);
+        g.drawString("S1\u25b6", 4, 15);
+        g.drawRoundRect(0, 47, 30, 15, 2, 2);
+        g.drawString("S2\u25b6", 4, 59);
+        g.drawRoundRect(0, 90, 30, 15, 2, 2);
+        g.drawString("S3\u25b6", 4, 102);
+        g.drawRoundRect(0, 134, 30, 15, 2, 2);
+        g.drawString("S4\u25b6", 4, 146);
+        g.drawRoundRect(0, 177, 30, 15, 2, 2);
+        g.drawString("S5\u25b6", 4, 189);
+        g.drawRoundRect(0, 221, 30, 15, 2, 2);
+        g.drawString("S6\u25b6", 4, 233);
     }
 
 }

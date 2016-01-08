@@ -1,9 +1,6 @@
-package ch.poiuqwer.saitek.fip4j;
+package ch.poiuqwer.saitek.fip4j.demo;
 
-import ch.poiuqwer.saitek.fip4j.demo.InputDemo;
-import ch.poiuqwer.saitek.fip4j.demo.LedDemo;
-import ch.poiuqwer.saitek.fip4j.demo.ScreenDemo;
-import ch.poiuqwer.saitek.fip4j.impl.*;
+import ch.poiuqwer.saitek.fip4j.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,15 +36,15 @@ public class Main {
     public static void main(String[] args) {
         try {
             LOGGER.info("Starting {}.", PLUGIN_NAME);
-            if (LibraryManager.loadDirectOutput()) {
+            if (LibraryManager.loadLibrary()) {
                 directOutput = LibraryManager.getDirectOutput();
                 directOutput.setup(PLUGIN_NAME);
                 Collection<Device> devices = directOutput.getDevices();
-                directOutput.addDeviceChangeEventHandler(new DeviceChangeEventHandler() {
+                directOutput.addDeviceChangeListener(new DeviceChangeListener() {
                     @Override
                     public void deviceConnected(Device device) {
                         try {
-                            runDemos(device);
+                            setupDeviceForDemos(device);
                         } catch (InterruptedException | IOException e) {
                             logUnexpectedError(e);
                         }
@@ -59,7 +56,7 @@ public class Main {
                     }
                 });
                 for (Device device : devices) {
-                    runDemos(device);
+                    setupDeviceForDemos(device);
                 }
                 if (devices.isEmpty()) {
                     int seconds = 0;
@@ -83,19 +80,23 @@ public class Main {
         LOGGER.error("Awww, unexpected error.", t);
     }
 
-    private static void runDemos(Device device) throws InterruptedException, IOException {
+    private static void setupDeviceForDemos(Device device) throws InterruptedException, IOException {
         numberOfDemosRunning.incrementAndGet();
         Thread.sleep(1000);
         LOGGER.info("Running demos.");
-        device.addPageChangeEventHandler(new LoggingPageChangeEventHandler());
+        device.addPageChangeListener(new LoggingPageChangeListener());
         Page page = device.addPage();
-        new LedDemo(page).run();
-        new ScreenDemo(page).run();
-        new InputDemo(page).run();
+        runDemos(page);
         numberOfDemosRunning.decrementAndGet();
     }
 
-    private static class LoggingPageChangeEventHandler implements PageChangeEventHandler {
+    private static void runDemos(Page page) throws InterruptedException, IOException {
+//        new LedDemo(page).run();
+//        new ScreenDemo(page).run();
+        new InputDemo(page).run();
+    }
+
+    private static class LoggingPageChangeListener implements PageChangeListener {
         @Override
         public void pageActivated(Page page) {
             LOGGER.info("Page activated: {}", page);

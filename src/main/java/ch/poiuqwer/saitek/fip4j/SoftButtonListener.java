@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -15,10 +15,14 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public interface PageChangeEventHandler {
+public interface SoftButtonListener {
 
-    void pageActivated(Page page);
+    void buttonPressed(Button button);
 
-    void pageDeactivated(Page page);
+    void buttonReleased(Button button);
+
+    void knobTurnedClockwise(Knob knob);
+
+    void knobTurnedCounterclockwise(Knob knob);
 
 }

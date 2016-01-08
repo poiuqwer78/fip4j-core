@@ -1,4 +1,4 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import org.slf4j.Logger;

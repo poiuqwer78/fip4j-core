@@ -1,4 +1,6 @@
-package ch.poiuqwer.saitek.fip4j.impl;
+package ch.poiuqwer.saitek.fip4j;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -15,14 +17,29 @@ package ch.poiuqwer.saitek.fip4j.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public interface SoftButtonEventHandler {
+@SuppressWarnings("unused")
+public enum Button {
 
-    void buttonPressed(Button button);
+    S1(0x00000020, 1),
+    S2(0x00000040, 2),
+    S3(0x00000080, 3),
+    S4(0x00000100, 4),
+    S5(0x00000200, 5),
+    S6(0x00000400, 6),
+    UP(0x00000000, 7),
+    DOWN(0x00000000, 8);
 
-    void buttonReleased(Button button);
+    public final int value;
+    public final int led;
 
-    void knobTurnUp(Knob knob);
+    Button(int value, int led){
+        this.value = value;
+        this.led = led;
+    }
 
-    void knobTurnDown(Knob knob);
+    public static Button S(int i){
+        Preconditions.checkArgument(i>=0 && i <=6);
+        return Button.valueOf("S"+i);
+    }
 
 }
