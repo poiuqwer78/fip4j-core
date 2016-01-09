@@ -181,7 +181,12 @@ public class DirectOutput {
         Memory serialNumberMemory = new Memory(32);
         serialNumberMemory.clear();
         char[] serialNumberCharArray = new char[16];
-        call(dll.DirectOutput_GetSerialNumber(devicePointer, serialNumberMemory, 16));
+        try {
+            call(dll.DirectOutput_GetSerialNumber(devicePointer, serialNumberMemory, 16));
+        } catch (UnsatisfiedLinkError e){
+            LOGGER.warn("Could not retrieve serial number. Upgrade of DirectOutput driver required.");
+            return "N/A";
+        }
         serialNumberMemory.read(0, serialNumberCharArray, 0, 16);
         return String.valueOf(serialNumberCharArray).split("\0")[0];
     }

@@ -33,6 +33,8 @@ public class ScreenDemo {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ScreenDemo.class);
 
+    private static final Color TEXT_COLOR = new Color(191, 191, 191);
+
     Page page;
 
     public ScreenDemo(Page page) {
@@ -44,7 +46,7 @@ public class ScreenDemo {
 
         BufferedImage bufferedImage = DisplayBuffer.getSuitableBufferedImage();
         Graphics g = bufferedImage.getGraphics();
-        Font font = new Font(MONOSPACED, BOLD, 14);
+        Font font = new Font(MONOSPACED, PLAIN, 14);
         g.setFont(font);
 
         g.setColor(DARK_GRAY);
@@ -55,12 +57,12 @@ public class ScreenDemo {
 
         drawColors(g);
 
-        g.setColor(GRAY);
+        g.setColor(TEXT_COLOR);
         drawText(g);
 
         measurePerformance(bufferedImage, g);
 
-        Thread.sleep(5000);
+        Thread.sleep(1000);
 
         page.clearScreen();
     }
@@ -78,11 +80,16 @@ public class ScreenDemo {
             if (i % 2 == 0) {
                 page.setImage(bufferedImage);
                 frames++;
+                float duration = (System.nanoTime() - start) / 1000000000;
+                float framerate = frames / duration;
+                g.setColor(BLACK);
+                g.fillRect(50,210,269,20);
+                g.setColor(TEXT_COLOR);
+                if (Float.isFinite(framerate)) {
+                    g.drawString(String.format("Framerate: %5.2f", framerate), 50, 225);
+                }
             }
         }
-        float duration = (System.nanoTime() - start) / 1000000000;
-        long framerate = (long) (frames / duration);
-        g.drawString("Framerate: " + framerate + " /s", 50, 225);
         page.setImage(bufferedImage);
     }
 
