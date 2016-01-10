@@ -46,6 +46,7 @@ public class ScreenDemo implements PageChangeListener {
     private final Page page;
     private BufferedImage bufferedImage;
     private Graphics g;
+    private BufferedImage savedBufferedImage;
 
     public ScreenDemo(Page page) {
         LOGGER.info("Running screen demo.");
@@ -72,7 +73,7 @@ public class ScreenDemo implements PageChangeListener {
 
         LOGGER.info("Try the buttons on the device.");
         LOGGER.info("Program stops if no action is performed on the device for more than five seconds.");
-
+        SoftButtonListener handler = new DemoSoftButtonListener();
         drawButton(1, false);
         drawButton(2, false);
         drawButton(3, false);
@@ -81,9 +82,10 @@ public class ScreenDemo implements PageChangeListener {
         drawButton(6, false);
         drawKnob(Knob.LEFT, 0);
         drawKnob(Knob.RIGHT, 0);
+        savedBufferedImage = DisplayBuffer.getSuitableBufferedImage();
+        savedBufferedImage.setData(bufferedImage.getData());
+        drawDialog();
         page.setImage(bufferedImage);
-        SoftButtonListener handler = new DemoSoftButtonListener();
-
         page.addSoftButtonEventHandler(handler);
         waitForKey = true;
         while (waitForKey) {
@@ -92,6 +94,20 @@ public class ScreenDemo implements PageChangeListener {
         }
         page.removeSoftButtonEventHandler(handler);
         LOGGER.info("Inactivity for more than five seconds. Stopping input demo.");
+    }
+
+    private void drawDialog() {
+        g.setColor(DARK_GRAY);
+        g.fillRect(100, 80, 175, 80);
+        g.setColor(GRAY);
+        g.drawRect(100, 80, 175, 80);
+        g.setColor(WHITE);
+        Font font = new Font(DIALOG, PLAIN, 14);
+        g.setFont(font);
+        g.drawString("Try the buttons on the left", 104, 95);
+        g.drawString("and the knobs below.", 104, 110);
+        g.drawString("The demo stops after five", 104, 135);
+        g.drawString("seconds inactivity.", 104, 150);
     }
 
     private void measureFrameRateDemo() {
@@ -232,6 +248,7 @@ public class ScreenDemo implements PageChangeListener {
     private class DemoSoftButtonListener implements SoftButtonListener {
         @Override
         public void buttonPressed(Button button) {
+            removeDialog();
             LOGGER.info("Button pressed: {}", button);
             if (toggleButtons.contains(button)) {
                 drawButton(button.led, false);
@@ -249,6 +266,19 @@ public class ScreenDemo implements PageChangeListener {
             waitForKey = true;
         }
 
+        @SuppressWarnings("SynchronizeOnNonFinalField")
+        private void removeDialog() {
+            if (savedBufferedImage != null) {
+                synchronized (savedBufferedImage) {
+                    if (savedBufferedImage != null) {
+                        bufferedImage = savedBufferedImage;
+                        g = bufferedImage.getGraphics();
+                        savedBufferedImage = null;
+                    }
+                }
+            }
+        }
+
         @Override
         public void buttonReleased(Button button) {
             LOGGER.info("Button released: {}", button);
@@ -259,6 +289,7 @@ public class ScreenDemo implements PageChangeListener {
 
         @Override
         public void knobTurnedClockwise(Knob knob) {
+            removeDialog();
             LOGGER.info("Knob turned up: {}", knob);
             blink(knob, DOWN);
             waitForKey = true;
@@ -266,6 +297,7 @@ public class ScreenDemo implements PageChangeListener {
 
         @Override
         public void knobTurnedCounterclockwise(Knob knob) {
+            removeDialog();
             LOGGER.info("Knob turned down: {}", knob);
             blink(knob, UP);
             waitForKey = true;
