@@ -34,6 +34,7 @@ import static java.awt.Font.*;
 public class DeviceDemo implements PageChangeListener, SoftButtonListener {
 
     public static final Color CONSOLE_COLOR = new Color(0, 127, 0);
+    public static final Color LIGHT_BLUE = new Color(64, 64, 203);
     private static Logger LOGGER = LoggerFactory.getLogger(DeviceDemo.class);
 
     private static final Color TEXT_COLOR = new Color(191, 191, 191);
@@ -215,13 +216,16 @@ public class DeviceDemo implements PageChangeListener, SoftButtonListener {
         drawCursor(0, 0, 2);
         Font font = new Font(MONOSPACED, BOLD, 14);
         g.setFont(font);
-        String s = "root ~ $ ";
+        String s = "root";
         g.drawString(s, 0, 15);
+        s = "~ $";
+        g.setColor(LIGHT_BLUE);
+        g.drawString(s, 4 * 8, 15);
         page.setImage(imageBuffer);
         drawCursor(9, 0, 1);
         font = new Font(MONOSPACED, PLAIN, 14);
         g.setFont(font);
-        g.setColor(CONSOLE_COLOR);
+        g.setColor(TEXT_COLOR);
         s = "./startdemo -a";
         for (int i = 1; i <= s.length(); i++) {
             g.drawString(s.substring(0, i), 72, 15);
