@@ -91,9 +91,7 @@ public class Main {
     }
 
     private static void runDemos(Page page) throws InterruptedException, IOException {
-        new LedDemo(page).run();
         new ScreenDemo(page).run();
-        new InputDemo(page).run();
     }
 
     private static class LoggingPageChangeListener implements PageChangeListener {

@@ -37,13 +37,15 @@ public class Page {
     }
 
     public void activate() {
-        Preconditions.checkState(alive);
-        active = true;
+        if (alive) {
+            active = true;
+        }
     }
 
     public void deactivate() {
-        Preconditions.checkState(alive);
-        active = false;
+        if (alive) {
+            active = false;
+        }
     }
 
     public void kill() {
@@ -63,18 +65,21 @@ public class Page {
     }
 
     public void setLed(Button button, LedState state) {
-        Preconditions.checkState(active && alive);
-        directOutput.setLed(this, button, state);
+        if (active && alive) {
+            directOutput.setLed(this, button, state);
+        }
     }
 
     public void setImage(BufferedImage image) {
-        Preconditions.checkState(active && alive);
-        directOutput.setImage(this, image);
+        if (active && alive) {
+            directOutput.setImage(this, image);
+        }
     }
 
     public void clearScreen() {
-        Preconditions.checkState(active && alive);
-        directOutput.clearScreen(this);
+        if (active && alive) {
+            directOutput.clearScreen(this);
+        }
     }
 
     public void addSoftButtonEventHandler(SoftButtonListener handler) {
