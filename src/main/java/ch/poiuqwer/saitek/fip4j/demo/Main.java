@@ -4,7 +4,6 @@ import ch.poiuqwer.saitek.fip4j.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,11 +42,7 @@ public class Main {
                 directOutput.addDeviceChangeListener(new DeviceChangeListener() {
                     @Override
                     public void deviceConnected(Device device) {
-                        try {
-                            setupDeviceForDemos(device);
-                        } catch (InterruptedException | IOException e) {
-                            logUnexpectedError(e);
-                        }
+                        setupDeviceForDemos(device);
                     }
 
                     @Override
@@ -55,9 +50,7 @@ public class Main {
 
                     }
                 });
-                for (Device device : devices) {
-                    setupDeviceForDemos(device);
-                }
+                devices.forEach(Main::setupDeviceForDemos);
                 if (devices.isEmpty()) {
                     int seconds = 0;
                     LOGGER.info("Waiting 30 seconds for devices to be plugged in ...");
@@ -80,29 +73,15 @@ public class Main {
         LOGGER.error("Awww, unexpected error.", t);
     }
 
-    private static void setupDeviceForDemos(Device device) throws InterruptedException, IOException {
+    private static void setupDeviceForDemos(Device device) {
         numberOfDemosRunning.incrementAndGet();
-        Thread.sleep(1000);
         LOGGER.info("Running demos.");
-        device.addPageChangeListener(new LoggingPageChangeListener());
         Page page = device.addPage();
         runDemos(page);
         numberOfDemosRunning.decrementAndGet();
     }
 
-    private static void runDemos(Page page) throws InterruptedException, IOException {
+    private static void runDemos(Page page) {
         new ScreenDemo(page).run();
-    }
-
-    private static class LoggingPageChangeListener implements PageChangeListener {
-        @Override
-        public void pageActivated(Page page) {
-            LOGGER.info("Page activated: {}", page);
-        }
-
-        @Override
-        public void pageDeactivated(Page page) {
-            LOGGER.info("Page deactivated: {}", page);
-        }
     }
 }

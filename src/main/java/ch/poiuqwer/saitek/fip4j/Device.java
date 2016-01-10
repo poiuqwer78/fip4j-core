@@ -205,9 +205,7 @@ public class Device {
 
     void disconnect() {
         this.connected = false;
-        for (Page page : pages) {
-            page.deactivate();
-        }
+        pages.forEach(Page::deactivate);
     }
 
     @SuppressWarnings("unused")

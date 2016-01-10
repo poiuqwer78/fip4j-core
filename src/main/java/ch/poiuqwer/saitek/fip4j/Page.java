@@ -1,7 +1,5 @@
 package ch.poiuqwer.saitek.fip4j;
 
-import com.google.common.base.Preconditions;
-
 import java.awt.image.BufferedImage;
 
 /**

@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,7 +30,7 @@ import static java.awt.Font.*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class ScreenDemo {
+public class ScreenDemo implements PageChangeListener {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ScreenDemo.class);
 
@@ -44,27 +43,32 @@ public class ScreenDemo {
     private int[] buttonYCoordinate = new int[]{3, 47, 90, 134, 177, 221};
     private int[] knobXCoordinate = new int[]{80, 217};
 
-    Page page;
+    private final Page page;
     private BufferedImage bufferedImage;
     private Graphics g;
 
     public ScreenDemo(Page page) {
-        this.page = page;
-    }
-
-    public void run() throws InterruptedException {
         LOGGER.info("Running screen demo.");
-
+        this.page = page;
+        page.getDevice().addPageChangeListener(this);
         bufferedImage = DisplayBuffer.getSuitableBufferedImage();
         g = bufferedImage.getGraphics();
+    }
 
+    public void run() {
         drawLayout();
+        displayTitleText();
+        drawColorBands();
+        measureFrameRateDemo();
+        interactiveButtonsDemo();
+        cleanup();
+    }
 
-        drawColors();
+    private void cleanup() {
+        page.clearScreen();
+    }
 
-        drawText();
-
-        measurePerformance();
+    private void interactiveButtonsDemo() {
 
         LOGGER.info("Try the buttons on the device.");
         LOGGER.info("Program stops if no action is performed on the device for more than five seconds.");
@@ -77,23 +81,20 @@ public class ScreenDemo {
         drawButton(6, false);
         drawKnob(Knob.LEFT, 0);
         drawKnob(Knob.RIGHT, 0);
-
         page.setImage(bufferedImage);
-
         SoftButtonListener handler = new DemoSoftButtonListener();
 
         page.addSoftButtonEventHandler(handler);
         waitForKey = true;
         while (waitForKey) {
             waitForKey = false;
-            Thread.sleep(5000);
+            sleep(5000);
         }
         page.removeSoftButtonEventHandler(handler);
         LOGGER.info("Inactivity for more than five seconds. Stopping input demo.");
-        page.clearScreen();
     }
 
-    private void measurePerformance() {
+    private void measureFrameRateDemo() {
         boolean on = true;
         Font font = new Font(MONOSPACED, PLAIN, 14);
         g.setFont(font);
@@ -112,20 +113,16 @@ public class ScreenDemo {
                 page.setImage(bufferedImage);
                 frames++;
                 float duration = (System.nanoTime() - start) / 1000000000;
-                float framerate = frames / duration;
+                float frameRate = frames / duration;
                 g.setColor(BLACK);
                 g.fillRect(240, 145, 100, 15);
                 g.setColor(TEXT_COLOR);
-                if (Float.isFinite(framerate)) {
-                    g.drawString(String.format("%5.2f fps", framerate), 240, 157);
+                if (Float.isFinite(frameRate)) {
+                    g.drawString(String.format("%5.2f fps", frameRate), 240, 157);
                 }
                 page.setLed(UP, on ? ON : OFF);
                 page.setLed(DOWN, on ? OFF : ON);
-                if (on) {
-                    on = false;
-                } else {
-                    on = true;
-                }
+                on = !on;
             }
         }
         page.setImage(bufferedImage);
@@ -133,22 +130,19 @@ public class ScreenDemo {
         page.setLed(DOWN, OFF);
     }
 
-    private void drawColors() {
+    private void drawColorBands() {
         for (int i = 0; i < 256; i++) {
             g.setColor(new Color(i, 0, 0));
             g.drawLine(60 + i, 57, 60 + i, 77);
-        }
-        for (int i = 0; i < 256; i++) {
             g.setColor(new Color(0, i, 0));
             g.drawLine(60 + i, 85, 60 + i, 105);
-        }
-        for (int i = 0; i < 256; i++) {
             g.setColor(new Color(0, 0, i));
             g.drawLine(60 + i, 113, 60 + i, 133);
         }
+        page.setImage(bufferedImage);
     }
 
-    private void drawText() {
+    private void displayTitleText() {
         g.setColor(TEXT_COLOR);
         Font font = new Font(MONOSPACED, BOLD, 16);
         g.setFont(font);
@@ -223,6 +217,16 @@ public class ScreenDemo {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void pageActivated(Page page) {
+        page.setImage(bufferedImage);
+    }
+
+    @Override
+    public void pageDeactivated(Page page) {
+
     }
 
     private class DemoSoftButtonListener implements SoftButtonListener {
