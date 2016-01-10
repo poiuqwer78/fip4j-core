@@ -82,6 +82,6 @@ public class Main {
     }
 
     private static void runDemos(Page page) {
-        new ScreenDemo(page).run();
+        new DeviceDemo(page).run();
     }
 }
