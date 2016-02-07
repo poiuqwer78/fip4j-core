@@ -37,7 +37,7 @@ public class DirectOutput {
     private HRESULT result;
 
 
-    public DirectOutput(Library dll) {
+    DirectOutput(Library dll) {
         this.dll = dll;
     }
 

@@ -213,7 +213,7 @@ public class Device {
         return serialNumber;
     }
 
-    public Pointer getPointer() {
+    Pointer getPointer() {
         return pointer;
     }
 
