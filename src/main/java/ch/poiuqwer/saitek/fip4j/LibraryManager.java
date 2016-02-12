@@ -20,18 +20,18 @@ import org.slf4j.LoggerFactory;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public class LibraryManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(LibraryManager.class);
 
     private static DirectOutput directOutput;
 
     /**
-     * For Testing
+     * Allow to inject (mock) library for testing
      *
      * @param library the mock/test implementation of the JNA Interface
      */
-    @SuppressWarnings("unused")
-    public static void setLibraryForTesting(Library library) {
+    public static void setLibrary(Library library) {
         if (directOutput != null) {
             directOutput.cleanup();
         }

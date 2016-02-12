@@ -1,5 +1,8 @@
 package ch.poiuqwer.saitek.fip4j;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.image.BufferedImage;
 
 /**
@@ -17,8 +20,9 @@ import java.awt.image.BufferedImage;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public class Page {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(Page.class);
     private final int index;
     private final Device device;
     private final DisplayBuffer displayBuffer;
@@ -46,20 +50,16 @@ public class Page {
         }
     }
 
-    public void kill() {
-        alive = false;
+    public String getDeviceSerialNumber() {
+        if (device.isConnected()) {
+            return device.getSerialNumber();
+        }
+        LOGGER.warn("Could not retrieve serial number. Upgrade of DirectOutput driver required.");
+        return "N/A";
     }
 
-    public int getIndex() {
-        return index;
-    }
-
-    public Device getDevice() {
+    Device getDevice() {
         return device;
-    }
-
-    DisplayBuffer getDisplayBuffer() {
-        return displayBuffer;
     }
 
     public void setLed(Button button, LedState state) {
@@ -80,12 +80,20 @@ public class Page {
         }
     }
 
-    public void addSoftButtonEventHandler(SoftButtonListener handler) {
-        device.addSoftButtonListener(handler);
+    public void addSoftButtonListener(SoftButtonListener listener) {
+        device.addSoftButtonListener(listener);
     }
 
-    public void removeSoftButtonEventHandler(SoftButtonListener handler) {
-        device.removeSoftButtonListener(handler);
+    public void removeSoftButtonListener(SoftButtonListener listener) {
+        device.removeSoftButtonListener(listener);
+    }
+
+    public void addPageChangeListener(PageChangeListener listener) {
+        device.addPageChangeListener(listener);
+    }
+
+    public void removePageChangeListener(PageChangeListener listener) {
+        device.removePageChangeListener(listener);
     }
 
     @Override
@@ -93,6 +101,18 @@ public class Page {
         return "Page{" +
                 "index=" + index +
                 '}';
+    }
+
+    DisplayBuffer getDisplayBuffer() {
+        return displayBuffer;
+    }
+
+    void kill() {
+        alive = false;
+    }
+
+    int getIndex() {
+        return index;
     }
 
 }

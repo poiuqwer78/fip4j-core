@@ -25,6 +25,7 @@ import java.util.Set;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public class Device {
     private static final Logger LOGGER = LoggerFactory.getLogger(Device.class);
     private final String serialNumber;
@@ -45,6 +46,14 @@ public class Device {
         this.serialNumber = serialNumber;
     }
 
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
     public Page addPage() {
         Preconditions.checkState(connected);
         Page page = new Page(this, pages.size());
@@ -54,29 +63,20 @@ public class Device {
         return page;
     }
 
-    @SuppressWarnings("unused")
-    public Page getActivePage() {
-        Preconditions.checkState(connected);
-        return activePage;
-    }
-
-
-    @SuppressWarnings("unused")
     public void removePage(Page page) {
         LibraryManager.getDirectOutput().removePage(page);
         page.kill();
     }
 
-    @SuppressWarnings("unused")
-    public boolean isConnected() {
-        return connected;
+    public Page getActivePage() {
+        Preconditions.checkState(connected);
+        return activePage;
     }
 
     public void addPageChangeListener(PageChangeListener listener) {
         pageChangeListeners.add(listener);
     }
 
-    @SuppressWarnings("unused")
     public void removePageChangeListener(PageChangeListener listener) {
         pageChangeListeners.remove(listener);
     }
@@ -85,7 +85,6 @@ public class Device {
         softButtonListeners.add(listener);
     }
 
-    @SuppressWarnings("unused")
     public void removeSoftButtonListener(SoftButtonListener listener) {
         softButtonListeners.remove(listener);
     }
@@ -206,11 +205,6 @@ public class Device {
     void disconnect() {
         this.connected = false;
         pages.forEach(Page::deactivate);
-    }
-
-    @SuppressWarnings("unused")
-    public String getSerialNumber() {
-        return serialNumber;
     }
 
     Pointer getPointer() {

@@ -21,6 +21,7 @@ import java.awt.image.DataBufferByte;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public class DisplayBuffer {
 
     public static final int DISPLAY_WIDTH = 320;
@@ -30,6 +31,10 @@ public class DisplayBuffer {
     public static final int SIZE = DISPLAY_HEIGHT * LINE_SIZE;
 
     private final Memory displayBuffer = new Memory(SIZE);
+
+    public static BufferedImage getSuitableBufferedImage() {
+        return new BufferedImage(320, 240, BufferedImage.TYPE_3BYTE_BGR);
+    }
 
     DisplayBuffer() {
         clear();
@@ -60,10 +65,6 @@ public class DisplayBuffer {
 
     Memory getMemory() {
         return displayBuffer;
-    }
-
-    public static BufferedImage getSuitableBufferedImage() {
-        return new BufferedImage(320, 240, BufferedImage.TYPE_3BYTE_BGR);
     }
 
 }

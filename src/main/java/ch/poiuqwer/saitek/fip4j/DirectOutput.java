@@ -24,6 +24,7 @@ import java.util.*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public class DirectOutput {
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectOutput.class);
 
@@ -33,27 +34,43 @@ public class DirectOutput {
     private final Library dll;
     private final Map<Pointer, Device> devices = new HashMap<>();
     private final Set<DeviceChangeListener> deviceChangeListeners = new HashSet<>();
-
+    private final Library.Pfn_DirectOutput_DeviceChange deviceChangeCallback =
+            (hDevice, bAdded, pCtxt) -> handleDeviceChange(hDevice, bAdded);
+    private final Library.Pfn_DirectOutput_SoftButtonChange softButtonCallback =
+            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> handleSoftButtonEvent(hDevice, dwButtons);
+    private final Library.Pfn_DirectOutput_PageChange pageChangeCallback =
+            (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> handlePageChangeEvent(hDevice, dwPage, bSetActive);
     private HRESULT result;
 
+    HRESULT getResult() {
+        return result;
+    }
 
     DirectOutput(Library dll) {
         this.dll = dll;
     }
 
-    @SuppressWarnings("unused")
-    HRESULT getResult() {
-        return result;
+    public void setup(String pluginName) {
+        initialize(pluginName);
+        enumerateDevices();
+        registerDeviceChangeCallback();
     }
 
-    private final Library.Pfn_DirectOutput_DeviceChange deviceChangeCallback =
-            (hDevice, bAdded, pCtxt) -> handleDeviceChange(hDevice, bAdded);
+    public void addDeviceChangeListener(DeviceChangeListener listener) {
+        deviceChangeListeners.add(listener);
+    }
 
-    private final Library.Pfn_DirectOutput_SoftButtonChange softButtonCallback =
-            (Pointer hDevice, int dwButtons, Pointer pCtxt) -> handleSoftButtonEvent(hDevice, dwButtons);
+    public void removeDeviceChangeListener(DeviceChangeListener listener) {
+        deviceChangeListeners.remove(listener);
+    }
 
-    private final Library.Pfn_DirectOutput_PageChange pageChangeCallback =
-            (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> handlePageChangeEvent(hDevice, dwPage, bSetActive);
+    public void cleanup() {
+        call(dll.DirectOutput_Deinitialize());
+    }
+
+    public Collection<Device> getDevices() {
+        return Collections.unmodifiableCollection(devices.values());
+    }
 
     private void handleDeviceChange(Pointer hDevice, byte bAdded) {
         if (bAdded == 1) {
@@ -92,16 +109,6 @@ public class DirectOutput {
         }
     }
 
-    @SuppressWarnings("unused")
-    public void addDeviceChangeListener(DeviceChangeListener listener) {
-        deviceChangeListeners.add(listener);
-    }
-
-    @SuppressWarnings("unused")
-    public void removeDeviceChangeListener(DeviceChangeListener listener) {
-        deviceChangeListeners.remove(listener);
-    }
-
     private void handleSoftButtonEvent(Pointer hDevice, int dwButtons) {
         LOGGER.debug("Soft Button State: {}", dwButtons);
         Device device = devices.get(hDevice);
@@ -118,26 +125,12 @@ public class DirectOutput {
         }
     }
 
-    public void setup(String pluginName) {
-        initialize(pluginName);
-        enumerateDevices();
-        registerDeviceChangeCallback();
-    }
-
     private void registerDeviceChangeCallback() {
         call(dll.DirectOutput_RegisterDeviceCallback(deviceChangeCallback, null));
     }
 
     private void initialize(String pluginName) {
         call(dll.DirectOutput_Initialize(new WString(pluginName)));
-    }
-
-    public void cleanup() {
-        call(dll.DirectOutput_Deinitialize());
-    }
-
-    public Collection<Device> getDevices() {
-        return Collections.unmodifiableCollection(devices.values());
     }
 
     private void enumerateDevices() {

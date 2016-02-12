@@ -15,6 +15,7 @@ package ch.poiuqwer.saitek.fip4j;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@SuppressWarnings("unused")
 public enum LedState {
     ON(1), OFF(0);
 
