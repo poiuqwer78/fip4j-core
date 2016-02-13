@@ -20,12 +20,12 @@ public enum Knob {
     LEFT(0x00000010, 0x00000008),
     RIGHT(0x00000004,0x00000002);
 
-    public final int ccwValue;
-    public final int cwValue;
+    public final int counterclockwiseValue;
+    public final int clockwiseValue;
 
     Knob(int ccw, int cw) {
-        this.ccwValue = ccw;
-        this.cwValue = cw;
+        this.counterclockwiseValue = ccw;
+        this.clockwiseValue = cw;
     }
 
 }

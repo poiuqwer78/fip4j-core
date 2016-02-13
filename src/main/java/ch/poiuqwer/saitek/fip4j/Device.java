@@ -5,10 +5,9 @@ import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -33,13 +32,16 @@ public class Device {
 
     private boolean connected = true;
 
+    private final Set<Consumer<Page>> pageActivatedCallbacks = new HashSet<>();
+    private final Set<Consumer<Page>> pageDeactivatedCallbacks = new HashSet<>();
+    private final Set<Consumer<Button>> buttonPressedCallbacks = new HashSet<>();
+    private final Set<Consumer<Button>> buttonReleasedCallbacks = new HashSet<>();
+    private final Set<BiConsumer<Knob, TurnDirection>> knobTurnedCallbacks = new HashSet<>();
+
     private final List<Page> pages = new ArrayList<>();
     private Page activePage;
 
     private Set<Button> downButtons = new HashSet<>();
-
-    private final Set<PageChangeListener> pageChangeListeners = new HashSet<>();
-    private final Set<SoftButtonListener> softButtonListeners = new HashSet<>();
 
     public Device(Pointer pointer, String serialNumber) {
         this.pointer = pointer;
@@ -73,20 +75,24 @@ public class Device {
         return activePage;
     }
 
-    public void addPageChangeListener(PageChangeListener listener) {
-        pageChangeListeners.add(listener);
+    void onPageActivated(Consumer<Page> callback) {
+        pageActivatedCallbacks.add(callback);
     }
 
-    public void removePageChangeListener(PageChangeListener listener) {
-        pageChangeListeners.remove(listener);
+    void onPageDeactivated(Consumer<Page> callback) {
+        pageDeactivatedCallbacks.add(callback);
     }
 
-    public void addSoftButtonListener(SoftButtonListener listener) {
-        softButtonListeners.add(listener);
+    void onButtonPressed(Consumer<Button> callback) {
+        buttonPressedCallbacks.add(callback);
     }
 
-    public void removeSoftButtonListener(SoftButtonListener listener) {
-        softButtonListeners.remove(listener);
+    void onButtonReleased(Consumer<Button> callback) {
+        buttonReleasedCallbacks.add(callback);
+    }
+
+    void onKnobTurned(BiConsumer<Knob, TurnDirection> callback) {
+        knobTurnedCallbacks.add(callback);
     }
 
     void handlePageChange(int dwPage, byte bSetActive) {
@@ -94,39 +100,47 @@ public class Device {
         if (activePage != null && activePage.getIndex() == dwPage) {
             if (bSetActive == 0) {
                 activePage.deactivate();
+                CallbackHandler.executeAll(pageDeactivatedCallbacks, activePage);
                 activePage = null;
             }
         } else {
             if (bSetActive == 1) {
                 activePage = pages.get(dwPage);
                 activePage.activate();
+                CallbackHandler.executeAll(pageActivatedCallbacks, activePage);
             }
         }
-        firePageChangeEvents(dwPage, bSetActive);
     }
 
-    private void firePageChangeEvents(int dwPage, byte bSetActive) {
-        for (PageChangeListener listener : pageChangeListeners) {
-            if (bSetActive == 1) {
-                try {
-                    listener.pageActivated(pages.get(dwPage));
-                } catch (Throwable t) {
-                    LOGGER.error("Error in EventHandler.", t);
-                }
-            } else {
-                try {
-                    listener.pageDeactivated(pages.get(dwPage));
-                } catch (Throwable t) {
-                    LOGGER.error("Error in EventHandler.", t);
-                }
-            }
-        }
-    }
 
     void handleSoftButtonChange(int dwButtons) {
         Set<Button> newDownButtons = new HashSet<>();
         Set<Button> pressedButtons = new HashSet<>();
         Set<Button> releasedButtons = new HashSet<>();
+        determineButtonStates(dwButtons, newDownButtons, pressedButtons, releasedButtons);
+        fireSoftButtonEvents(dwButtons, pressedButtons, releasedButtons);
+        downButtons = newDownButtons;
+    }
+
+    void handleKnobChange(int dwButtons) {
+        for (Knob knob : Knob.values()) {
+            if (turnedClockwise(knob, dwButtons)) {
+                CallbackHandler.executeAll(knobTurnedCallbacks, knob, TurnDirection.CLOCKWISE);
+            } else if (turnedCounterclockwise(knob, dwButtons)) {
+                CallbackHandler.executeAll(knobTurnedCallbacks, knob, TurnDirection.COUNTERCLOCKWISE);
+            }
+        }
+    }
+
+    private boolean turnedCounterclockwise(Knob knob, int dwButtons) {
+        return (knob.counterclockwiseValue & dwButtons) != 0;
+    }
+
+    private boolean turnedClockwise(Knob knob, int dwButtons) {
+        return (knob.clockwiseValue & dwButtons) != 0;
+    }
+
+    private void determineButtonStates(int dwButtons, Set<Button> newDownButtons, Set<Button> pressedButtons, Set<Button> releasedButtons) {
         for (int i = 1; i <= 6; i++) {
             Button s = Button.S(i);
             if (pressed(s, dwButtons)) {
@@ -140,66 +154,19 @@ public class Device {
                 }
             }
         }
-        fireSoftButtonEvents(dwButtons, pressedButtons, releasedButtons);
-        downButtons = newDownButtons;
-    }
-
-    private void fireSoftButtonEvents(int dwButtons, Set<Button> pressedButtons, Set<Button> releasedButtons) {
-        for (SoftButtonListener handler : softButtonListeners) {
-            firePressedSoftButtonEvents(pressedButtons, handler);
-            fireReleasedSoftButtonEvents(releasedButtons, handler);
-            fireKnobEvents(dwButtons, handler);
-        }
-    }
-
-    private void firePressedSoftButtonEvents(Set<Button> pressedButtons, SoftButtonListener handler) {
-        for (Button pressed : pressedButtons) {
-            try {
-                handler.buttonPressed(pressed);
-            } catch (Throwable t) {
-                LOGGER.error("Error in EventHandler.", t);
-            }
-        }
-    }
-
-    private void fireReleasedSoftButtonEvents(Set<Button> releasedButtons, SoftButtonListener handler) {
-        for (Button released : releasedButtons) {
-            try {
-                handler.buttonReleased(released);
-            } catch (Throwable t) {
-                LOGGER.error("Error in EventHandler.", t);
-            }
-        }
-    }
-
-    private void fireKnobEvents(int dwButtons, SoftButtonListener handler) {
-        for (Knob knob : Knob.values()) {
-            if (turnedClockwise(knob, dwButtons)) {
-                try {
-                    handler.knobTurnedClockwise(knob);
-                } catch (Throwable t) {
-                    LOGGER.error("Error in EventHandler.", t);
-                }
-            } else if (turnedCounterclockwise(knob, dwButtons)) {
-                try {
-                    handler.knobTurnedCounterclockwise(knob);
-                } catch (Throwable t) {
-                    LOGGER.error("Error in EventHandler.", t);
-                }
-            }
-        }
     }
 
     private boolean pressed(Button s, int dwButtons) {
         return (s.value & dwButtons) != 0;
     }
 
-    private boolean turnedCounterclockwise(Knob knob, int dwButtons) {
-        return (knob.ccwValue & dwButtons) != 0;
-    }
-
-    private boolean turnedClockwise(Knob knob, int dwButtons) {
-        return (knob.cwValue & dwButtons) != 0;
+    private void fireSoftButtonEvents(int dwButtons, Set<Button> pressedButtons, Set<Button> releasedButtons) {
+        for (Button pressed : pressedButtons) {
+            CallbackHandler.executeAll(buttonPressedCallbacks, pressed);
+        }
+        for (Button released : releasedButtons) {
+            CallbackHandler.executeAll(buttonReleasedCallbacks, released);
+        }
     }
 
     void disconnect() {

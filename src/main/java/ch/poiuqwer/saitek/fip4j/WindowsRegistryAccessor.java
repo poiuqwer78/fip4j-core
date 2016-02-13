@@ -23,8 +23,8 @@ import static com.sun.jna.platform.win32.WinReg.HKEY_LOCAL_MACHINE;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class WindowsRegistry {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WindowsRegistry.class);
+public class WindowsRegistryAccessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WindowsRegistryAccessor.class);
     private static final String REG_KEY = "SOFTWARE\\Saitek\\DirectOutput";
     private static final String REG_VALUE = "DirectOutput";
     private static final String DEFAULT_LOCATION = "C:\\Program Files\\Saitek\\DirectOutput";

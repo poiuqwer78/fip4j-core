@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -33,13 +34,16 @@ public class DirectOutput {
 
     private final Library dll;
     private final Map<Pointer, Device> devices = new HashMap<>();
-    private final Set<DeviceChangeListener> deviceChangeListeners = new HashSet<>();
+    private final Set<Consumer<Device>> deviceConnectedCallbacks = new HashSet<>();
+    private final Set<Consumer<Device>> deviceDisconnectedCallbacks = new HashSet<>();
+
     private final Library.Pfn_DirectOutput_DeviceChange deviceChangeCallback =
             (hDevice, bAdded, pCtxt) -> handleDeviceChange(hDevice, bAdded);
     private final Library.Pfn_DirectOutput_SoftButtonChange softButtonCallback =
             (Pointer hDevice, int dwButtons, Pointer pCtxt) -> handleSoftButtonEvent(hDevice, dwButtons);
     private final Library.Pfn_DirectOutput_PageChange pageChangeCallback =
             (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> handlePageChangeEvent(hDevice, dwPage, bSetActive);
+
     private HRESULT result;
 
     HRESULT getResult() {
@@ -56,20 +60,20 @@ public class DirectOutput {
         registerDeviceChangeCallback();
     }
 
-    public void addDeviceChangeListener(DeviceChangeListener listener) {
-        deviceChangeListeners.add(listener);
-    }
-
-    public void removeDeviceChangeListener(DeviceChangeListener listener) {
-        deviceChangeListeners.remove(listener);
-    }
-
     public void cleanup() {
         call(dll.DirectOutput_Deinitialize());
     }
 
     public Collection<Device> getDevices() {
         return Collections.unmodifiableCollection(devices.values());
+    }
+
+    public void onDeviceConnected(Consumer<Device> callback) {
+        deviceConnectedCallbacks.add(callback);
+    }
+
+    public void onDeviceDisconnected(Consumer<Device> callback) {
+        deviceDisconnectedCallbacks.add(callback);
     }
 
     private void handleDeviceChange(Pointer hDevice, byte bAdded) {
@@ -85,13 +89,7 @@ public class DirectOutput {
             LOGGER.info("Device disconnected: {}", devices.get(hDevice).toString());
             Device device = devices.remove(hDevice);
             device.disconnect();
-            fireDeviceDisconnectedEvents(device);
-        }
-    }
-
-    private void fireDeviceDisconnectedEvents(Device device) {
-        for (DeviceChangeListener handler : deviceChangeListeners) {
-            handler.deviceDisconnected(device);
+            CallbackHandler.executeAll(deviceDisconnectedCallbacks, device);
         }
     }
 
@@ -99,13 +97,7 @@ public class DirectOutput {
         if (isFlightInstrumentPanel(hDevice)) {
             Device device = setupDevice(hDevice);
             devices.put(hDevice, device);
-            fireDeviceConnectedEvents(device);
-        }
-    }
-
-    private void fireDeviceConnectedEvents(Device device) {
-        for (DeviceChangeListener handler : deviceChangeListeners) {
-            handler.deviceConnected(device);
+            CallbackHandler.executeAll(deviceConnectedCallbacks, device);
         }
     }
 
@@ -114,6 +106,7 @@ public class DirectOutput {
         Device device = devices.get(hDevice);
         if (device != null) {
             device.handleSoftButtonChange(dwButtons);
+            device.handleKnobChange(dwButtons);
         }
     }
 
@@ -191,7 +184,6 @@ public class DirectOutput {
         return GUID.fromBinary(guidMemory.getByteArray(0, 16));
     }
 
-    @SuppressWarnings("unused")
     private GUID getDeviceGuid(Pointer devicePointer) {
         Memory guidMemory = new Memory(16);
         guidMemory.clear();

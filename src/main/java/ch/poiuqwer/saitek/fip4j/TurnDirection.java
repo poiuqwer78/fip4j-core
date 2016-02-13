@@ -15,10 +15,6 @@ package ch.poiuqwer.saitek.fip4j;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public interface DeviceChangeListener {
-
-    void deviceConnected(Device device);
-
-    void deviceDisconnected(Device device);
-
+public enum TurnDirection {
+    CLOCKWISE, COUNTERCLOCKWISE
 }

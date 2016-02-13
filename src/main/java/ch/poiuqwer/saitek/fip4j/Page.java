@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -80,20 +82,24 @@ public class Page {
         }
     }
 
-    public void addSoftButtonListener(SoftButtonListener listener) {
-        device.addSoftButtonListener(listener);
+    public void onPageActivated(Consumer<Page> callback) {
+        device.onPageActivated(callback);
     }
 
-    public void removeSoftButtonListener(SoftButtonListener listener) {
-        device.removeSoftButtonListener(listener);
+    public void onPageDeactivated(Consumer<Page> callback) {
+        device.onPageDeactivated(callback);
     }
 
-    public void addPageChangeListener(PageChangeListener listener) {
-        device.addPageChangeListener(listener);
+    public void onButtonPressed(Consumer<Button> callback) {
+        device.onButtonPressed(callback);
     }
 
-    public void removePageChangeListener(PageChangeListener listener) {
-        device.removePageChangeListener(listener);
+    public void onButtonReleased(Consumer<Button> callback) {
+        device.onButtonReleased(callback);
+    }
+
+    public void onKnobTurned(BiConsumer<Knob, TurnDirection> callback) {
+        device.onKnobTurned(callback);
     }
 
     @Override

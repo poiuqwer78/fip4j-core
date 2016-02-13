@@ -51,7 +51,7 @@ public class LibraryManager {
 
     public static boolean loadLibrary() {
         LOGGER.debug("Loading DirectOutput library.");
-        System.setProperty("jna.library.path", WindowsRegistry.getLibraryPath());
+        System.setProperty("jna.library.path", WindowsRegistryAccessor.getLibraryPath());
         try {
             NativeLibrary.getInstance(Library.JNA_LIBRARY_NAME);
             Library library = (Library) Native.loadLibrary(Library.JNA_LIBRARY_NAME, Library.class);
