@@ -15,6 +15,15 @@ package ch.poiuqwer.saitek.fip4j;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public enum TurnDirection {
-    CLOCKWISE, COUNTERCLOCKWISE
+@SuppressWarnings("unused")
+public final class KnobEvent {
+    public final Page page;
+    public final Knob knob;
+    public final KnobState state;
+
+    KnobEvent(Page page, Knob knob, KnobState state) {
+        this.page = page;
+        this.knob = knob;
+        this.state = state;
+    }
 }

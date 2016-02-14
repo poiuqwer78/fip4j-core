@@ -16,17 +16,14 @@ package ch.poiuqwer.saitek.fip4j;
  * limitations under the License.
  */
 @SuppressWarnings("unused")
-public enum Knob {
+public final class ButtonEvent {
+    public final Page page;
+    public final Button button;
+    public final ButtonState state;
 
-    LEFT(0x00000010, 0x00000008),
-    RIGHT(0x00000004,0x00000002);
-
-    public final int counterclockwiseValue;
-    public final int clockwiseValue;
-
-    Knob(int ccw, int cw) {
-        this.counterclockwiseValue = ccw;
-        this.clockwiseValue = cw;
+    ButtonEvent(Page page, Button button, ButtonState state) {
+        this.page = page;
+        this.button = button;
+        this.state = state;
     }
-
 }

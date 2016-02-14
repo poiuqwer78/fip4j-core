@@ -1,5 +1,7 @@
 package ch.poiuqwer.saitek.fip4j;
 
+import com.google.common.base.Preconditions;
+import com.google.common.eventbus.EventBus;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
@@ -9,6 +11,12 @@ import org.slf4j.LoggerFactory;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.function.Consumer;
+
+import static ch.poiuqwer.saitek.fip4j.ButtonState.PRESSED;
+import static ch.poiuqwer.saitek.fip4j.ButtonState.RELEASED;
+import static ch.poiuqwer.saitek.fip4j.DeviceState.*;
+import static ch.poiuqwer.saitek.fip4j.PageState.ACTIVE;
+import static ch.poiuqwer.saitek.fip4j.PageState.INACTIVE;
 
 /**
  * Copyright 2015 Hermann Lehner
@@ -33,9 +41,11 @@ public class DirectOutput {
     private static final GUID X52 = GUID.fromString("{29DAD506-F93B-4F20-85FA-1E02C04FAC17}");
 
     private final Library dll;
+    private final EventBus eventBus;
+
+    private Set<Button> downButtons = new HashSet<>();
+
     private final Map<Pointer, Device> devices = new HashMap<>();
-    private final Set<Consumer<Device>> deviceConnectedCallbacks = new HashSet<>();
-    private final Set<Consumer<Device>> deviceDisconnectedCallbacks = new HashSet<>();
 
     private final Library.Pfn_DirectOutput_DeviceChange deviceChangeCallback =
             (hDevice, bAdded, pCtxt) -> handleDeviceChange(hDevice, bAdded);
@@ -44,14 +54,9 @@ public class DirectOutput {
     private final Library.Pfn_DirectOutput_PageChange pageChangeCallback =
             (Pointer hDevice, int dwPage, byte bSetActive, Pointer pCtxt) -> handlePageChangeEvent(hDevice, dwPage, bSetActive);
 
-    private HRESULT result;
-
-    HRESULT getResult() {
-        return result;
-    }
-
-    DirectOutput(Library dll) {
+    DirectOutput(Library dll, EventBus eventBus) {
         this.dll = dll;
+        this.eventBus = eventBus;
     }
 
     public void setup(String pluginName) {
@@ -68,12 +73,12 @@ public class DirectOutput {
         return Collections.unmodifiableCollection(devices.values());
     }
 
-    public void onDeviceConnected(Consumer<Device> callback) {
-        deviceConnectedCallbacks.add(callback);
+    public void registerSubscriber(Object subscriber) {
+        eventBus.register(subscriber);
     }
 
-    public void onDeviceDisconnected(Consumer<Device> callback) {
-        deviceDisconnectedCallbacks.add(callback);
+    public void unregisterSubscriber(Object subscriber) {
+        eventBus.unregister(subscriber);
     }
 
     private void handleDeviceChange(Pointer hDevice, byte bAdded) {
@@ -89,7 +94,7 @@ public class DirectOutput {
             LOGGER.info("Device disconnected: {}", devices.get(hDevice).toString());
             Device device = devices.remove(hDevice);
             device.disconnect();
-            CallbackHandler.executeAll(deviceDisconnectedCallbacks, device);
+            eventBus.post(new DeviceEvent(device, DISCONNECTED));
         }
     }
 
@@ -97,7 +102,7 @@ public class DirectOutput {
         if (isFlightInstrumentPanel(hDevice)) {
             Device device = setupDevice(hDevice);
             devices.put(hDevice, device);
-            CallbackHandler.executeAll(deviceConnectedCallbacks, device);
+            eventBus.post(new DeviceEvent(device, CONNECTED));
         }
     }
 
@@ -105,16 +110,92 @@ public class DirectOutput {
         LOGGER.debug("Soft Button State: {}", dwButtons);
         Device device = devices.get(hDevice);
         if (device != null) {
-            device.handleSoftButtonChange(dwButtons);
-            device.handleKnobChange(dwButtons);
+            handleSoftButtonChange(device, dwButtons);
+            handleKnobChange(device, dwButtons);
         }
+    }
+
+    private void handleSoftButtonChange(Device device, int dwButtons) {
+        Set<Button> newDownButtons = new HashSet<>();
+        Set<Button> pressedButtons = new HashSet<>();
+        Set<Button> releasedButtons = new HashSet<>();
+        determineButtonStates(dwButtons, newDownButtons, pressedButtons, releasedButtons);
+        fireSoftButtonEvents(device, dwButtons, pressedButtons, releasedButtons);
+        downButtons = newDownButtons;
+    }
+
+    private void determineButtonStates(int dwButtons, Set<Button> newDownButtons, Set<Button> pressedButtons, Set<Button> releasedButtons) {
+        for (int i = 1; i <= 6; i++) {
+            Button s = Button.S(i);
+            if (pressed(s, dwButtons)) {
+                newDownButtons.add(Button.S(i));
+                if (!downButtons.contains(s)) {
+                    pressedButtons.add(s);
+                }
+            } else {
+                if (downButtons.contains(s)) {
+                    releasedButtons.add(s);
+                }
+            }
+        }
+    }
+
+    private boolean pressed(Button s, int dwButtons) {
+        return (s.value & dwButtons) != 0;
+    }
+
+    private void fireSoftButtonEvents(Device device, int dwButtons, Set<Button> pressedButtons, Set<Button> releasedButtons) {
+        Page page = device.getActivePage();
+        for (Button pressed : pressedButtons) {
+            eventBus.post(new ButtonEvent(page, pressed, PRESSED));
+        }
+        for (Button released : releasedButtons) {
+            eventBus.post(new ButtonEvent(page, released, RELEASED));
+        }
+    }
+
+    private void handleKnobChange(Device device, int dwButtons) {
+        Page page = device.getActivePage();
+        for (Knob knob : Knob.values()) {
+            if (turnedClockwise(knob, dwButtons)) {
+                eventBus.post(new KnobEvent(page, knob, KnobState.TURNED_CLOCKWISE));
+            } else if (turnedCounterclockwise(knob, dwButtons)) {
+                eventBus.post(new KnobEvent(page, knob, KnobState.TURNED_COUNTERCLOCKWISE));
+            }
+        }
+    }
+
+    private boolean turnedCounterclockwise(Knob knob, int dwButtons) {
+        return (knob.counterclockwiseValue & dwButtons) != 0;
+    }
+
+    private boolean turnedClockwise(Knob knob, int dwButtons) {
+        return (knob.clockwiseValue & dwButtons) != 0;
     }
 
     private void handlePageChangeEvent(Pointer hDevice, int dwPage, byte bSetActive) {
         LOGGER.debug("Page Change - Page: {} Active: {}", dwPage, bSetActive);
         Device device = devices.get(hDevice);
         if (device != null) {
-            device.handlePageChange(dwPage, bSetActive);
+            handlePageChange(device, dwPage, bSetActive);
+        }
+    }
+
+    private void handlePageChange(Device device, int dwPage, byte bSetActive) {
+        Page activePage = device.getActivePage();
+        if (activePage != null && activePage.getIndex() == dwPage) {
+            if (bSetActive == 0) {
+                activePage.deactivate();
+                device.setActivePage(null);
+                eventBus.post(new PageEvent(activePage, INACTIVE));
+            }
+        } else {
+            if (bSetActive == 1) {
+                Page newActivePage = device.getPages().get(dwPage);
+                newActivePage.activate();
+                device.setActivePage(newActivePage);
+                eventBus.post(new PageEvent(newActivePage, ACTIVE));
+            }
         }
     }
 
@@ -147,7 +228,7 @@ public class DirectOutput {
 
     private Device setupDevice(Pointer devicePointer) {
         String serialNumber = getSerialNumber(devicePointer);
-        Device result = new Device(devicePointer, serialNumber);
+        Device result = new Device(this, devicePointer, serialNumber);
         registerSoftButtonCallback(devicePointer);
         registerPageChangeCallback(devicePointer);
         LOGGER.info("Device connected: {}", result.toString());
@@ -169,7 +250,7 @@ public class DirectOutput {
         char[] serialNumberCharArray = new char[16];
         try {
             call(dll.DirectOutput_GetSerialNumber(devicePointer, serialNumberMemory, 16));
-        } catch (UnsatisfiedLinkError e){
+        } catch (UnsatisfiedLinkError e) {
             LOGGER.warn("Could not retrieve serial number. Upgrade of DirectOutput driver required.");
             return "N/A";
         }
@@ -248,8 +329,12 @@ public class DirectOutput {
                 buffer.getMemory()));
     }
 
+    EventBus getEventBus() {
+        return eventBus;
+    }
+
     private void call(int code) {
-        result = HRESULT.of(code);
+        HRESULT result = HRESULT.of(code);
         String methodName;
         switch (result) {
             case S_OK:
@@ -268,5 +353,4 @@ public class DirectOutput {
                 LOGGER.error("Call '{}' {}", methodName, result);
         }
     }
-
 }

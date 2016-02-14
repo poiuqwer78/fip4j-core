@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * limitations under the License.
  */
 @SuppressWarnings("unused")
-public class Page {
+public final class Page {
     private static final Logger LOGGER = LoggerFactory.getLogger(Page.class);
     private final int index;
     private final Device device;
@@ -33,35 +33,31 @@ public class Page {
     private boolean active = true;
     private boolean alive = true;
 
-    public Page(Device device, int index) {
+    Page(Device device, int index) {
         this.index = index;
         this.device = device;
         this.displayBuffer = new DisplayBuffer();
-        this.directOutput = LibraryManager.getDirectOutput();
+        this.directOutput = device.getDirectOutput();
     }
 
-    public void activate() {
+    void activate() {
         if (alive) {
             active = true;
         }
     }
 
-    public void deactivate() {
+    void deactivate() {
         if (alive) {
             active = false;
         }
     }
 
-    public String getDeviceSerialNumber() {
-        if (device.isConnected()) {
-            return device.getSerialNumber();
-        }
-        LOGGER.warn("Could not retrieve serial number. Upgrade of DirectOutput driver required.");
-        return "N/A";
+    public Device getDevice() {
+        return device;
     }
 
-    Device getDevice() {
-        return device;
+    public DirectOutput getDirectOutput() {
+        return directOutput;
     }
 
     public void setLed(Button button, LedState state) {
@@ -80,26 +76,6 @@ public class Page {
         if (active && alive) {
             directOutput.clearScreen(this);
         }
-    }
-
-    public void onPageActivated(Consumer<Page> callback) {
-        device.onPageActivated(callback);
-    }
-
-    public void onPageDeactivated(Consumer<Page> callback) {
-        device.onPageDeactivated(callback);
-    }
-
-    public void onButtonPressed(Consumer<Button> callback) {
-        device.onButtonPressed(callback);
-    }
-
-    public void onButtonReleased(Consumer<Button> callback) {
-        device.onButtonReleased(callback);
-    }
-
-    public void onKnobTurned(BiConsumer<Knob, TurnDirection> callback) {
-        device.onKnobTurned(callback);
     }
 
     @Override
