@@ -1,5 +1,9 @@
 package ch.poiuqwer.saitek.fip4j;
 
+import java.util.Objects;
+
+import static ch.poiuqwer.saitek.fip4j.PageState.*;
+
 /**
  * Copyright 2015 Hermann Lehner
  * <p>
@@ -17,11 +21,32 @@ package ch.poiuqwer.saitek.fip4j;
  */
 @SuppressWarnings("unused")
 public final class PageEvent {
-    public final Page page;
-    public final PageState state;
+    private final Page page;
+    private final PageState state;
 
     PageEvent(Page page, PageState state) {
         this.page = page;
         this.state = state;
     }
+
+    public Device getDevice() {
+        return page.getDevice();
+    }
+
+    public Page getPage() {
+        return page;
+    }
+
+    public boolean isRelevantFor(Page page) {
+        return Objects.equals(this.page, page);
+    }
+
+    public boolean isActive() {
+        return state == ACTIVE;
+    }
+
+    public boolean isInactive() {
+        return state == INACTIVE;
+    }
+
 }

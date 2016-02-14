@@ -1,5 +1,7 @@
 package ch.poiuqwer.saitek.fip4j;
 
+import static ch.poiuqwer.saitek.fip4j.DeviceState.*;
+
 /**
  * Copyright 2015 Hermann Lehner
  * <p>
@@ -17,11 +19,23 @@ package ch.poiuqwer.saitek.fip4j;
  */
 @SuppressWarnings("unused")
 public final class DeviceEvent {
-    public final Device device;
-    public final DeviceState state;
+    private final Device device;
+    private final DeviceState state;
 
     DeviceEvent(Device device, DeviceState state) {
         this.device = device;
         this.state = state;
+    }
+
+    public Device getDevice() {
+        return device;
+    }
+
+    public boolean isConnected() {
+        return state == CONNECTED;
+    }
+
+    public boolean isDisconnected() {
+        return state == DISCONNECTED;
     }
 }

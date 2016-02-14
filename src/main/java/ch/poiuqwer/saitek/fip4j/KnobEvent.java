@@ -1,5 +1,9 @@
 package ch.poiuqwer.saitek.fip4j;
 
+import java.util.Objects;
+
+import static ch.poiuqwer.saitek.fip4j.KnobState.*;
+
 /**
  * Copyright 2015 Hermann Lehner
  * <p>
@@ -17,13 +21,37 @@ package ch.poiuqwer.saitek.fip4j;
  */
 @SuppressWarnings("unused")
 public final class KnobEvent {
-    public final Page page;
-    public final Knob knob;
-    public final KnobState state;
+    private final Page page;
+    private final Knob knob;
+    private final KnobState state;
 
     KnobEvent(Page page, Knob knob, KnobState state) {
         this.page = page;
         this.knob = knob;
         this.state = state;
+    }
+
+    public Device getDevice() {
+        return page.getDevice();
+    }
+
+    public Page getPage() {
+        return page;
+    }
+
+    public boolean isRelevantFor(Page page) {
+        return Objects.equals(this.page, page);
+    }
+
+    public Knob getKnob() {
+        return knob;
+    }
+
+    public boolean isTurnedClockwise() {
+        return state == TURNED_CLOCKWISE;
+    }
+
+    public boolean isTurnedCounterclockwise() {
+        return state == TURNED_COUNTERCLOCKWISE;
     }
 }

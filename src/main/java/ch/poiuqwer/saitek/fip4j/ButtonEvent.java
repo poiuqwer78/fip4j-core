@@ -1,5 +1,9 @@
 package ch.poiuqwer.saitek.fip4j;
 
+import java.util.Objects;
+
+import static ch.poiuqwer.saitek.fip4j.ButtonState.*;
+
 /**
  * Copyright 2015 Hermann Lehner
  * <p>
@@ -17,13 +21,38 @@ package ch.poiuqwer.saitek.fip4j;
  */
 @SuppressWarnings("unused")
 public final class ButtonEvent {
-    public final Page page;
-    public final Button button;
-    public final ButtonState state;
+    private final Page page;
+    private final Button button;
+    private final ButtonState state;
 
     ButtonEvent(Page page, Button button, ButtonState state) {
         this.page = page;
         this.button = button;
         this.state = state;
     }
+
+    public Device getDevice() {
+        return page.getDevice();
+    }
+
+    public Page getPage() {
+        return page;
+    }
+
+    public boolean isRelevantFor(Page page) {
+        return Objects.equals(this.page, page);
+    }
+
+    public Button getButton() {
+        return button;
+    }
+
+    public boolean isPressed() {
+        return state == PRESSED;
+    }
+
+    public boolean isReleased() {
+        return state == RELEASED;
+    }
+
 }
